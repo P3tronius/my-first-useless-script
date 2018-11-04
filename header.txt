@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name         New Userscript
 // @namespace    http://tampermonkey.net/
-// @version      0.1
+// @version      0.2
 // @description  try to take over the world!
 // @author       You
 // @match        https://betdice.one/
@@ -10,4 +10,6 @@
 // @require      https://cdnjs.cloudflare.com/ajax/libs/rxjs/5.5.11/Rx.js
 // @require      https://code.jquery.com/jquery.js
 // @require      http://ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/jquery-ui.min.js
+// @downloadURL  https://raw.githubusercontent.com/Petronious/my-first-useless-script/master/build/bundle.js
+// @updateURL   https://raw.githubusercontent.com/Petronious/my-first-useless-script/master/build/bundle.js
 // ==/UserScript==
