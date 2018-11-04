@@ -1,7 +1,6 @@
 import * as Utils from "./utils.js";
 import * as Vars from "./variables.js";
-
-var userName;
+import * as Monitor from "./monitor.js";
 
 export function onBodyMutate(mutations, observer) {
     var loginElt = document.querySelector(".user-dashboard");
@@ -11,7 +10,9 @@ export function onBodyMutate(mutations, observer) {
             var userName = userNameTag.children[1].textContent;
             userName = userName.length > 12 ? userName.substr(1, 12) : userName;
             Utils.log(`Welcome ${userName} !`);
-            Vars.initSubject.next(true);
+            setTimeout(function () {
+                Vars.initSubject.next(true);
+            }, 1000);
             observer.disconnect();
         }
     }
@@ -38,11 +39,16 @@ export function watchBetAmountChanges() {
 }
 
 export function onNewRollResult(mutations, observer) {
-    var rollResult = document.querySelector(".leve2-roll em").textContent;
+    var rollResultElt = document.querySelector(".leve2-roll em");
 
-    if (Vars.lastRolls.length === 10) {
-        Vars.lastRolls.shift();
+    if (rollResultElt) {
+        var rollResult = document.querySelector(".leve2-roll em").textContent;
+
+        if (Vars.lastRolls.length === 10) {
+            Vars.lastRolls.shift();
+        }
+        Vars.lastRolls.push(parseInt(rollResult));
+        Utils.recalculateRollAverages();
+        Monitor.processNewBetResult(parseInt(rollResult));
     }
-    Vars.lastRolls.push(parseInt(rollResult));
-    Utils.recalculateRollAverage();
 }

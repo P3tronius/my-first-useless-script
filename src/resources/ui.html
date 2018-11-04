@@ -1,8 +1,50 @@
-<div class="console-wrapper">
+<div class="cashmachine-wrapper">
+    <div class="monitor line1">
+        <div class="cell start-stop stopped">
+            <span class="header"></span>
+            <span class="value">START</span>
+        </div>
+        <div class="cell bet-amount">
+            <span class="header">Bet Amount</span>
+            <span class="value"></span>
+        </div>
+        <div class="cell roll-under">
+            <span class="header">Roll Under</span>
+            <span class="value"></span>
+        </div>
+        <div class="cell win-loss">
+            <span class="header">Win/Loss Amount</span>
+            <span class="value"></span>
+        </div>
+        <div class="cell loose-status">
+            <span class="header">Loose Status</span>
+            <span class="value"></span>
+        </div>
+    </div>
+    <div class="monitor line2">
+        <div class="cell">
+            <span class="header"></span>
+            <span class="value"></span>
+        </div>
+        <div class="cell avg-5">
+            <span class="header">Avg 5</span>
+            <span class="value"></span>
+        </div>
+        <div class="cell avg-10">
+            <span class="header">Avg 10</span>
+            <span class="value"></span>
+        </div>
+        <div class="cell nb-losses">
+            <span class="header">Nb Losses</span>
+            <span class="value"></span>
+        </div>
+        <div class="cell nb-wins">
+            <span class="header">Nb Wins</span>
+            <span class="value"></span>
+        </div>
+    </div>
     <div class="console-text"></div>
-    <div class="rolls-average">
-        <span class="rolls-avg-title">Last 10 rolls average:</span>
-        <span class="avg-value">0</span>
+    <div>
         <input type="button" value="Test" class="test-btn">
     </div>
     <div id="chartContainer"></div>

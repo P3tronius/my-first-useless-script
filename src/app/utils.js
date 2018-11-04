@@ -34,7 +34,8 @@ export function moveRollUnderCursorTo(value) {
     rollUnderBar.dispatchEvent(clickEvent);
 }
 
-export function recalculateRollAverage() {
-    Vars.setRollsAvgValue(Vars.lastRolls.reduce((a, b) => a + b, 0) / Vars.lastRolls.length);
-    Vars.rollsAvgElt.text(Vars.rollsAvgValue);
+export function recalculateRollAverages() {
+    Vars.setRollsAvg10Value(Vars.lastRolls.reduce((a, b) => a + b, 0) / Vars.lastRolls.length);
+    var last5Rolls = Vars.lastRolls.slice(Math.max(Vars.lastRolls.length - 5, 0))
+    Vars.setRollsAvg5Value(last5Rolls.reduce((a, b) => a + b, 0) / last5Rolls.length);
 }

@@ -18,15 +18,12 @@ async function resetChart() {
         await Utils.sleep(500);
         if (document.querySelector(".table-list tbody tr td:nth-child(5)")) {
             new MutationObserver(onTableResultsMutate).observe(document.querySelector(".table-list tbody tr td:nth-child(5)"), { characterData: true, subtree: true, childList: true });
-            var rollValue = document.querySelector(".table-list tbody tr td:nth-child(5)").textContent;
-            updateChart(rollValue);
-            chart.render();
             wait = false;
         }
     }
 }
 
-function updateChart(value) {
+function addNewValueToChart(value) {
     var dps = chart.options.data[0].dataPoints;
     var newValue = dps[value - 1].y + 1;
     var label = dps[value - 1].label;
@@ -37,7 +34,7 @@ function updateChart(value) {
 
 function onTableResultsMutate() {
     var rollValue = document.querySelector(".table-list tbody tr td:nth-child(5)").textContent;
-    updateChart(rollValue);
+    addNewValueToChart(rollValue);
 }
 
 function onTableTabMutate() {

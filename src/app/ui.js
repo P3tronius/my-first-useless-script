@@ -8,10 +8,6 @@ export function createUI () {
     $("head").append(css.default);
     $("body").append(html.default);
 
-
-    Vars.setConsoleElt($(".console-text"));
-    Vars.setRollsAvgElt($(".avg-value"));
-
     var opt = {
         width:      500,
         minWidth:   400,
@@ -23,24 +19,28 @@ export function createUI () {
         title:      'BetDice CashMachine'
     };
 
-    $(".console-wrapper").dialog(opt).dialog("open");
+    $(".cashmachine-wrapper").dialog(opt).dialog("open");
 
     // alternative way to position a dialog
-    $(".console-wrapper").parent().css({
+    $(".cashmachine-wrapper").parent().css({
         position: "fixed",
-        top: "144px",
-        left: "810px"
+        top: "78px",
+        right: "110px",
+        left: "initial"
     });
 
-    var opt = {
-        width:      500,
-        minWidth:   400,
-        minHeight:  200,
-        modal:      false,
-        autoOpen:   false,
-        resizable: false,
-        zIndex:     1,
-        title:      'Numbers repartion chart'
-    };
+
+    Vars.setConsoleElt($(".console-text"));
+    Vars.setRollsAvg10Elt($(".avg-10 .value"));
+    Vars.setRollsAvg5Elt($(".avg-5 .value"));
+    Vars.setBetAmountElt($(".bet-amount .value"))
+    Vars.setRollUnderElt($(".roll-under .value"))
+    Vars.setWinLossElt($(".win-loss .value"))
+    Vars.setLooseStatusElt($(".loose-status .value"))
+    Vars.setNbLossesElt($(".nb-losses .value"))
+    Vars.setNbWinsElt($(".nb-wins .value"))
+    Vars.setStartStopElt($(".start-stop"))
+
+    document.querySelector(".start-stop").addEventListener("click", Vars.startOrStopCashMachine);
 
 }

@@ -23,17 +23,19 @@ export function waitForGameToInit() {
 
     Vars.onRollUnderChangedSubject.pipe(Rx.operators.debounceTime(500)).subscribe(
         function (value) {
-            Utils.log("Roll Under changed to " + value);
             Vars.setRollUnderValue(value);
         }
     );
 
     Vars.onBetAmountChangedSubject.pipe(Rx.operators.auditTime(50)).subscribe(
         function (value) {
-            Utils.log("Bet Amount changed to " + value);
+            Vars.setBetAmountValue(value);
         }
     );
 
+    Vars.setLooseStatusValue(0);
+    Vars.setRollsAvg5Value(0);
+    Vars.setRollsAvg10Value(0);
 }
 
 function testButtonClicked() {
