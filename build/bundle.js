@@ -33,16 +33,19 @@ var nbWinsElt;
 var winLossValue = 0;
 var winLossValueElt;
 
-var started;
+var started = false;
 var startStopElt;
 
 var lastRolls = [];
 var rollsAverage = 0;
+var maxAcceptableLossAmount = 5;
+var initialAmount = 0.1;
 
 var initSubject = new Rx.Subject();
-
 var onRollUnderChangedSubject = new Rx.Subject();
 var onBetAmountChangedSubject = new Rx.Subject();
+var engineStarted = new Rx.Subject(false);
+var winLossAmountSubject = new Rx.Subject(undefined);
 
 // GETTERS AND SETTERS
 
@@ -56,6 +59,7 @@ function startOrStopCashMachine (value) {
     } else {
         started = !started;
     }
+    engineStarted.next(started);
     startStopElt.removeClass("started").removeClass("stopped");
     startStopElt.addClass(started ? "started" : "stopped");
     $(".start-stop .value").text(started ? "STOP" : "START");
@@ -79,11 +83,12 @@ function setRollUnderValue (value) {
 
 function setWinLossElt (value) {
     winLossValueElt = value;
-    winLossValueElt.text(0);
+    winLossValueElt.text('0 / ' + maxAcceptableLossAmount);
 }
 function addWinLossAmount (value) {
     winLossValue = Math.round((winLossValue + value) * 100) / 100;
-    winLossValueElt.text(winLossValue);
+    winLossValueElt.text(winLossValue + ' / ' + maxAcceptableLossAmount);
+    winLossAmountSubject.next(winLossValue);
 }
 
 function setLooseStatusElt (value) {
@@ -128,15 +133,31 @@ function incrementNbWinsValue () {
     nbWinsElt.text(nbWinsValue);
 }
 
+function setMaxAcceptableLossAmount (value) {
+    var v = value;
+    if (value.target) {
+        v = parseFloat(value.target.value);
+    }
+    maxAcceptableLossAmount = v;
+    winLossValueElt.text(winLossValue + '/' + maxAcceptableLossAmount);
+    winLossAmountSubject.next(winLossValue);
+}
+
+function setInitialAmount ($event) {
+    if ($event.target) {
+        initialAmount = parseFloat($event.target.value);
+    }
+}
+
 function setConsoleElt (value) {
     consoleElt = value;
 }
 
 var scripts = "<link href=\"//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/themes/le-frog/jquery-ui.min.css\" rel=\"stylesheet\" type=\"text/css\">\r\n<script src=\"https://canvasjs.com/assets/script/canvasjs.min.js\"></script>";
 
-var css = "<style type=\"text/css\">\r\n    .cashmachine-wrapper { padding: 0 !important; color: #67c23a; font-size: 12px; line-height: 1; background-color: #1c233f; width: 510px; overflow: scroll; height: 100px;}\r\n    .console-text {  max-height: 160px; height: 160px; overflow-y: auto; }\r\n    .console-text p { margin: 0; padding: 0; color: green; }\r\n    .test-btn { float: right; margin-right: 20px; }\r\n    .avg-value { color: black; font-size: 16px; padding-left: 10px; }\r\n    .ui-dialog-titlebar { padding: 3px !important; line-height: 0.6; }\r\n    .ui-dialog-title { font-size: 10px; padding: 0; margin: 0; height: 7px; overflow: initial !important; }\r\n    .ui-button-icon-only.ui-dialog-titlebar-close { height: 11px; width: 11px; top: 10px; }\r\n    .ui-widget-content { border: 1px solid #41455d; background: #1c233f; color: #ffffff; }\r\n    #chartContainer { height: 170px; padding: 0; }\r\n\r\n    .start-stop {\r\n        cursor: pointer;\r\n    }\r\n    .start-stop.started {\r\n        background-color: green;\r\n    }\r\n    .start-stop.stopped {\r\n        background-color: gray;\r\n    }\r\n\r\n    .monitor {\r\n        padding-left: 1px;\r\n        display: flex;\r\n    }\r\n\r\n    .cell {\r\n        width: 20%;\r\n        height: 50px;\r\n        border: 1px solid brown;\r\n        text-align: center;\r\n        display: grid;\r\n    }\r\n\r\n    .cell .value {\r\n        color: red;\r\n    }\r\n</style>";
+var css = "<style type=\"text/css\">\r\n    .cashmachine-wrapper { padding: 0 !important; color: #67c23a; font-size: 12px; line-height: 1; background-color: #1c233f; width: 510px; overflow: scroll; height: 100px;}\r\n    .console-text {  max-height: 160px; height: 160px; overflow-y: auto; }\r\n    .console-text p { margin: 0; padding: 0; color: green; }\r\n    .test-btn { float: right; margin-right: 20px; }\r\n    .avg-value { color: black; font-size: 16px; padding-left: 10px; }\r\n    .ui-dialog-titlebar { padding: 3px !important; line-height: 0.6; }\r\n    .ui-dialog-title { font-size: 10px; padding: 0; margin: 0; height: 7px; overflow: initial !important; }\r\n    .ui-button-icon-only.ui-dialog-titlebar-close { height: 11px; width: 11px; top: 10px; }\r\n    .ui-widget-content { border: 1px solid #41455d; background: #1c233f; color: #ffffff; }\r\n    #chartContainer { height: 170px; padding: 0; }\r\n\r\n    .start-stop {\r\n        cursor: pointer;\r\n    }\r\n    .start-stop.started {\r\n        background-color: green;\r\n    }\r\n    .start-stop.stopped {\r\n        background-color: gray;\r\n    }\r\n\r\n    .monitor {\r\n        padding-left: 1px;\r\n        display: flex;\r\n    }\r\n\r\n    .cell {\r\n        width: 20%;\r\n        height: 50px;\r\n        border: 1px solid brown;\r\n        text-align: center;\r\n        display: grid;\r\n    }\r\n\r\n    .cell .value {\r\n        color: red;\r\n    }\r\n\r\n    input.max-loss, input.initial-amount {\r\n        color: black;\r\n        text-align: end;\r\n        width: 50px;\r\n        height: 20px;\r\n    }\r\n\r\n    .inputs {\r\n        padding-bottom: 3px;\r\n        padding-top: 3px;\r\n    }\r\n\r\n</style>";
 
-var ui = "<div class=\"cashmachine-wrapper\">\r\n    <div class=\"monitor line1\">\r\n        <div class=\"cell start-stop stopped\">\r\n            <span class=\"header\"></span>\r\n            <span class=\"value\">START</span>\r\n        </div>\r\n        <div class=\"cell bet-amount\">\r\n            <span class=\"header\">Bet Amount</span>\r\n            <span class=\"value\"></span>\r\n        </div>\r\n        <div class=\"cell roll-under\">\r\n            <span class=\"header\">Roll Under</span>\r\n            <span class=\"value\"></span>\r\n        </div>\r\n        <div class=\"cell win-loss\">\r\n            <span class=\"header\">Win/Loss Amount</span>\r\n            <span class=\"value\"></span>\r\n        </div>\r\n        <div class=\"cell loose-status\">\r\n            <span class=\"header\">Loose Status</span>\r\n            <span class=\"value\"></span>\r\n        </div>\r\n    </div>\r\n    <div class=\"monitor line2\">\r\n        <div class=\"cell\">\r\n            <input type=\"button\" value=\"Test\" class=\"test-btn\" style=\"width: 100%;\">\r\n        </div>\r\n        <div class=\"cell avg-5\">\r\n            <span class=\"header\">Avg 5</span>\r\n            <span class=\"value\"></span>\r\n        </div>\r\n        <div class=\"cell avg-10\">\r\n            <span class=\"header\">Avg 10</span>\r\n            <span class=\"value\"></span>\r\n        </div>\r\n        <div class=\"cell nb-losses\">\r\n            <span class=\"header\">Nb Losses</span>\r\n            <span class=\"value\"></span>\r\n        </div>\r\n        <div class=\"cell nb-wins\">\r\n            <span class=\"header\">Nb Wins</span>\r\n            <span class=\"value\"></span>\r\n        </div>\r\n    </div>\r\n    <div class=\"console-text\"></div>\r\n    <div id=\"chartContainer\"></div>\r\n</div>";
+var ui = "<div class=\"cashmachine-wrapper\">\r\n    <div class=\"monitor line1\">\r\n        <div class=\"cell start-stop stopped\">\r\n            <span class=\"header\"></span>\r\n            <span class=\"value\"></span>\r\n        </div>\r\n        <div class=\"cell bet-amount\">\r\n            <span class=\"header\">Bet Amount</span>\r\n            <span class=\"value\"></span>\r\n        </div>\r\n        <div class=\"cell roll-under\">\r\n            <span class=\"header\">Roll Under</span>\r\n            <span class=\"value\"></span>\r\n        </div>\r\n        <div class=\"cell win-loss\">\r\n            <span class=\"header\">Win/Loss Amount</span>\r\n            <span class=\"value\"></span>\r\n        </div>\r\n        <div class=\"cell loose-status\">\r\n            <span class=\"header\">Loose Status</span>\r\n            <span class=\"value\"></span>\r\n        </div>\r\n    </div>\r\n    <div class=\"monitor line2\">\r\n        <div class=\"cell\">\r\n            <input type=\"button\" value=\"Test\" class=\"test-btn\" style=\"width: 100%;\">\r\n        </div>\r\n        <div class=\"cell avg-5\">\r\n            <span class=\"header\">Avg 5</span>\r\n            <span class=\"value\"></span>\r\n        </div>\r\n        <div class=\"cell avg-10\">\r\n            <span class=\"header\">Avg 10</span>\r\n            <span class=\"value\"></span>\r\n        </div>\r\n        <div class=\"cell nb-losses\">\r\n            <span class=\"header\">Nb Losses</span>\r\n            <span class=\"value\"></span>\r\n        </div>\r\n        <div class=\"cell nb-wins\">\r\n            <span class=\"header\">Nb Wins</span>\r\n            <span class=\"value\"></span>\r\n        </div>\r\n    </div>\r\n    <div class=\"inputs\">\r\n        <span>Initial amount:</span>\r\n        <input class=\"initial-amount\" type=\"number\">\r\n        <span>Max loss amount:</span>\r\n        <input class=\"max-loss\" type=\"number\">\r\n    </div>\r\n    <div class=\"console-text\"></div>\r\n    <div id=\"chartContainer\"></div>\r\n</div>";
 
 function createUI () {
     $("head").append(scripts);
@@ -177,6 +198,11 @@ function createUI () {
     setStartStopElt($(".start-stop"));
 
     document.querySelector(".start-stop").addEventListener("click", startOrStopCashMachine);
+    document.querySelector(".max-loss").addEventListener("change", setMaxAcceptableLossAmount);
+    document.querySelector(".initial-amount").addEventListener("change", setInitialAmount);
+
+    document.querySelector(".max-loss").value = maxAcceptableLossAmount;
+    document.querySelector(".initial-amount").value = initialAmount;
 
 }
 
@@ -214,6 +240,10 @@ function moveRollUnderCursorTo(value) {
     onRollUnderChangedSubject.next(value);
 }
 
+function clickOnRollButton() {
+    $(".btn-bar button").click();
+}
+
 function recalculateRollAverages() {
     setRollsAvg10Value(lastRolls.reduce((a, b) => a + b, 0) / lastRolls.length);
     var last5Rolls = lastRolls.slice(Math.max(lastRolls.length - 5, 0));
@@ -241,7 +271,7 @@ function onBodyMutate(mutations, observer) {
             log(`Welcome ${userName} !`);
             setTimeout(function () {
                 initSubject.next(true);
-            }, 1000);
+            }, 3000);
             observer.disconnect();
         }
     }
@@ -282,9 +312,31 @@ function onNewRollResult(mutations, observer) {
     }
 }
 
-function startCashMachineAlgo() {
-    // TODO. ahahah
+// checks the status of the engine on each iteration (i.e. will stop before next bet if engine stopped)
+async function startCashMachineAlgo() {
+
+    while (started) {
+        await sleep(1000 + Math.floor(Math.random() * Math.floor(1000)));
+         if (started) {
+            calculateNextBet();
+        }
+    }
+
 }
+
+function calculateNextBet() {
+    log("Placing next bet:");
+    placeBet(1, 96);
+
+    startOrStopCashMachine(false);
+}
+
+
+function placeBet(amount, rollUnder) {
+    moveRollUnderCursorTo(rollUnder);
+    changeAmountTo(amount);
+    clickOnRollButton();
+ }
 
 function waitForGameToInit() {
     new MutationObserver(onBodyMutate).observe(document.querySelector("body"), { childList: true });
@@ -298,9 +350,9 @@ function waitForGameToInit() {
 
                 watchBetAmountChanges();
                 moveRollUnderCursorTo(76);
-                changeAmountTo("0.1");
+                changeAmountTo(0.1);
+                startOrStopCashMachine(false);
                 log('Initialization finished');
-                startCashMachineAlgo();
             }
         });
 
@@ -478,6 +530,21 @@ function setupChartPoints() {
         });
 }
 
+function lockEngineInit() {
+    winLossAmountSubject.pipe(
+         Rx.operators.filter(
+             function (amount) {
+                 return amount != undefined;
+             }
+         )
+     ).subscribe(function (amount) {
+         if (amount > maxAcceptableLossAmount) {
+            log("Max loosed amount exceeded, forcing stop.");
+            startOrStopCashMachine(false);
+         }
+     });
+}
+
 (function() {
     'use strict';
 
@@ -485,4 +552,19 @@ function setupChartPoints() {
     createChart();
     waitForGameToInit();
 
+    engineStarted.pipe(
+        Rx.operators.filter(
+            function (state) {
+                return state != undefined;
+            }
+        )).subscribe(function (state) {
+            if (!state) {
+                log("Cash Machine algo STOPPED.");
+            } else {
+                log("Cash Machine algo STARTED.");
+                startCashMachineAlgo();
+            }
+        });
+
+    lockEngineInit();
 })();

@@ -12,7 +12,7 @@ export function onBodyMutate(mutations, observer) {
             Utils.log(`Welcome ${userName} !`);
             setTimeout(function () {
                 Vars.initSubject.next(true);
-            }, 1000);
+            }, 3000);
             observer.disconnect();
         }
     }

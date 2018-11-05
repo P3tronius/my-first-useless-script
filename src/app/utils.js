@@ -35,6 +35,10 @@ export function moveRollUnderCursorTo(value) {
     Vars.onRollUnderChangedSubject.next(value);
 }
 
+export function clickOnRollButton() {
+    $(".btn-bar button").click();
+}
+
 export function recalculateRollAverages() {
     Vars.setRollsAvg10Value(Vars.lastRolls.reduce((a, b) => a + b, 0) / Vars.lastRolls.length);
     var last5Rolls = Vars.lastRolls.slice(Math.max(Vars.lastRolls.length - 5, 0))

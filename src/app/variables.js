@@ -17,16 +17,19 @@ var nbWinsElt;
 export var winLossValue = 0;
 var winLossValueElt;
 
-export var started;
+export var started = false;
 var startStopElt;
 
 export var lastRolls = [];
 export var rollsAverage = 0;
+export var maxAcceptableLossAmount = 5;
+export var initialAmount = 0.1;
 
 export var initSubject = new Rx.Subject();
-
 export var onRollUnderChangedSubject = new Rx.Subject();
 export var onBetAmountChangedSubject = new Rx.Subject();
+export var engineStarted = new Rx.Subject(false);
+export var winLossAmountSubject = new Rx.Subject(undefined);
 
 // GETTERS AND SETTERS
 
@@ -40,6 +43,7 @@ export function startOrStopCashMachine (value) {
     } else {
         started = !started;
     }
+    engineStarted.next(started);
     startStopElt.removeClass("started").removeClass("stopped");
     startStopElt.addClass(started ? "started" : "stopped");
     $(".start-stop .value").text(started ? "STOP" : "START");
@@ -63,11 +67,12 @@ export function setRollUnderValue (value) {
 
 export function setWinLossElt (value) {
     winLossValueElt = value;
-    winLossValueElt.text(0);
+    winLossValueElt.text('0 / ' + maxAcceptableLossAmount);
 }
 export function addWinLossAmount (value) {
     winLossValue = Math.round((winLossValue + value) * 100) / 100;
-    winLossValueElt.text(winLossValue);
+    winLossValueElt.text(winLossValue + ' / ' + maxAcceptableLossAmount);
+    winLossAmountSubject.next(winLossValue);
 }
 
 export function setLooseStatusElt (value) {
@@ -110,6 +115,22 @@ export function setNbWinsElt (value) {
 export function incrementNbWinsValue () {
     nbWinsValue++;
     nbWinsElt.text(nbWinsValue);
+}
+
+export function setMaxAcceptableLossAmount (value) {
+    var v = value;
+    if (value.target) {
+        v = parseFloat(value.target.value);
+    }
+    maxAcceptableLossAmount = v;
+    winLossValueElt.text(winLossValue + '/' + maxAcceptableLossAmount);
+    winLossAmountSubject.next(winLossValue);
+}
+
+export function setInitialAmount ($event) {
+    if ($event.target) {
+        initialAmount = parseFloat($event.target.value);
+    }
 }
 
 export function setConsoleElt (value) {

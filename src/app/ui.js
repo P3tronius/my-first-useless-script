@@ -33,14 +33,19 @@ export function createUI () {
     Vars.setConsoleElt($(".console-text"));
     Vars.setRollsAvg10Elt($(".avg-10 .value"));
     Vars.setRollsAvg5Elt($(".avg-5 .value"));
-    Vars.setBetAmountElt($(".bet-amount .value"))
-    Vars.setRollUnderElt($(".roll-under .value"))
-    Vars.setWinLossElt($(".win-loss .value"))
-    Vars.setLooseStatusElt($(".loose-status .value"))
-    Vars.setNbLossesElt($(".nb-losses .value"))
-    Vars.setNbWinsElt($(".nb-wins .value"))
-    Vars.setStartStopElt($(".start-stop"))
+    Vars.setBetAmountElt($(".bet-amount .value"));
+    Vars.setRollUnderElt($(".roll-under .value"));
+    Vars.setWinLossElt($(".win-loss .value"));
+    Vars.setLooseStatusElt($(".loose-status .value"));
+    Vars.setNbLossesElt($(".nb-losses .value"));
+    Vars.setNbWinsElt($(".nb-wins .value"));
+    Vars.setStartStopElt($(".start-stop"));
 
     document.querySelector(".start-stop").addEventListener("click", Vars.startOrStopCashMachine);
+    document.querySelector(".max-loss").addEventListener("change", Vars.setMaxAcceptableLossAmount);
+    document.querySelector(".initial-amount").addEventListener("change", Vars.setInitialAmount);
+
+    document.querySelector(".max-loss").value = Vars.maxAcceptableLossAmount;
+    document.querySelector(".initial-amount").value = Vars.initialAmount;
 
 }

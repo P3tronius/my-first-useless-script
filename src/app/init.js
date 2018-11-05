@@ -15,9 +15,9 @@ export function waitForGameToInit() {
 
                 MutationsObs.watchBetAmountChanges();
                 Utils.moveRollUnderCursorTo(76);
-                Utils.changeAmountTo("0.1");
+                Utils.changeAmountTo(0.1);
+                Vars.startOrStopCashMachine(false);
                 Utils.log('Initialization finished');
-                Algo.startCashMachineAlgo();
             }
         });
 
