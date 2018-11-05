@@ -4,7 +4,7 @@
   "description": "Lambo project",
   "main": "src/main.js",
   "scripts": {
-    "build": " rollup -c --no-treeshake"
+    "build": "rollup -c --no-treeshake"
   },
   "dependencies": {},
   "devDependencies": {
@@ -13,5 +13,9 @@
     "rollup-plugin-license": "^0.7.0"
   },
   "author": "Ta mere",
-  "license": "ISC"
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:Petronious/my-first-useless-script.git"
+  }
 }
