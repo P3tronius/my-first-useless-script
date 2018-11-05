@@ -26,12 +26,13 @@ export function changeAmountTo(value) {
 export function moveRollUnderCursorTo(value) {
     var rollUnderBar = document.querySelector(".leve1");
     var rect = rollUnderBar.getBoundingClientRect();
-    var xCoord = ((rect.width * value) / 100) + rect.x;
+    var xCoord = ((rect.width * (value + 0.5)) / 100) + rect.x;
     var clickEvent = new MouseEvent("mousedown", {
         view: window,
         clientX: xCoord
     });
     rollUnderBar.dispatchEvent(clickEvent);
+    Vars.onRollUnderChangedSubject.next(value);
 }
 
 export function recalculateRollAverages() {

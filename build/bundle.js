@@ -136,7 +136,7 @@ var scripts = "<link href=\"//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/them
 
 var css = "<style type=\"text/css\">\r\n    .cashmachine-wrapper { padding: 0 !important; color: #67c23a; font-size: 12px; line-height: 1; background-color: #1c233f; width: 510px; overflow: scroll; height: 100px;}\r\n    .console-text {  max-height: 160px; height: 160px; overflow-y: auto; }\r\n    .console-text p { margin: 0; padding: 0; color: green; }\r\n    .test-btn { float: right; margin-right: 20px; }\r\n    .avg-value { color: black; font-size: 16px; padding-left: 10px; }\r\n    .ui-dialog-titlebar { padding: 3px !important; line-height: 0.6; }\r\n    .ui-dialog-title { font-size: 10px; padding: 0; margin: 0; height: 7px; overflow: initial !important; }\r\n    .ui-button-icon-only.ui-dialog-titlebar-close { height: 11px; width: 11px; top: 10px; }\r\n    .ui-widget-content { border: 1px solid #41455d; background: #1c233f; color: #ffffff; }\r\n    #chartContainer { height: 170px; padding: 0; }\r\n\r\n    .start-stop {\r\n        cursor: pointer;\r\n    }\r\n    .start-stop.started {\r\n        background-color: green;\r\n    }\r\n    .start-stop.stopped {\r\n        background-color: gray;\r\n    }\r\n\r\n    .monitor {\r\n        padding-left: 1px;\r\n        display: flex;\r\n    }\r\n\r\n    .cell {\r\n        width: 20%;\r\n        height: 50px;\r\n        border: 1px solid brown;\r\n        text-align: center;\r\n        display: grid;\r\n    }\r\n\r\n    .cell .value {\r\n        color: red;\r\n    }\r\n</style>";
 
-var ui = "<div class=\"cashmachine-wrapper\">\r\n    <div class=\"monitor line1\">\r\n        <div class=\"cell start-stop stopped\">\r\n            <span class=\"header\"></span>\r\n            <span class=\"value\">START</span>\r\n        </div>\r\n        <div class=\"cell bet-amount\">\r\n            <span class=\"header\">Bet Amount</span>\r\n            <span class=\"value\"></span>\r\n        </div>\r\n        <div class=\"cell roll-under\">\r\n            <span class=\"header\">Roll Under</span>\r\n            <span class=\"value\"></span>\r\n        </div>\r\n        <div class=\"cell win-loss\">\r\n            <span class=\"header\">Win/Loss Amount</span>\r\n            <span class=\"value\"></span>\r\n        </div>\r\n        <div class=\"cell loose-status\">\r\n            <span class=\"header\">Loose Status</span>\r\n            <span class=\"value\"></span>\r\n        </div>\r\n    </div>\r\n    <div class=\"monitor line2\">\r\n        <div class=\"cell\">\r\n            <span class=\"header\"></span>\r\n            <span class=\"value\"></span>\r\n        </div>\r\n        <div class=\"cell avg-5\">\r\n            <span class=\"header\">Avg 5</span>\r\n            <span class=\"value\"></span>\r\n        </div>\r\n        <div class=\"cell avg-10\">\r\n            <span class=\"header\">Avg 10</span>\r\n            <span class=\"value\"></span>\r\n        </div>\r\n        <div class=\"cell nb-losses\">\r\n            <span class=\"header\">Nb Losses</span>\r\n            <span class=\"value\"></span>\r\n        </div>\r\n        <div class=\"cell nb-wins\">\r\n            <span class=\"header\">Nb Wins</span>\r\n            <span class=\"value\"></span>\r\n        </div>\r\n    </div>\r\n    <div class=\"console-text\"></div>\r\n    <div>\r\n        <input type=\"button\" value=\"Test\" class=\"test-btn\">\r\n    </div>\r\n    <div id=\"chartContainer\"></div>\r\n</div>";
+var ui = "<div class=\"cashmachine-wrapper\">\r\n    <div class=\"monitor line1\">\r\n        <div class=\"cell start-stop stopped\">\r\n            <span class=\"header\"></span>\r\n            <span class=\"value\">START</span>\r\n        </div>\r\n        <div class=\"cell bet-amount\">\r\n            <span class=\"header\">Bet Amount</span>\r\n            <span class=\"value\"></span>\r\n        </div>\r\n        <div class=\"cell roll-under\">\r\n            <span class=\"header\">Roll Under</span>\r\n            <span class=\"value\"></span>\r\n        </div>\r\n        <div class=\"cell win-loss\">\r\n            <span class=\"header\">Win/Loss Amount</span>\r\n            <span class=\"value\"></span>\r\n        </div>\r\n        <div class=\"cell loose-status\">\r\n            <span class=\"header\">Loose Status</span>\r\n            <span class=\"value\"></span>\r\n        </div>\r\n    </div>\r\n    <div class=\"monitor line2\">\r\n        <div class=\"cell\">\r\n            <input type=\"button\" value=\"Test\" class=\"test-btn\" style=\"width: 100%;\">\r\n        </div>\r\n        <div class=\"cell avg-5\">\r\n            <span class=\"header\">Avg 5</span>\r\n            <span class=\"value\"></span>\r\n        </div>\r\n        <div class=\"cell avg-10\">\r\n            <span class=\"header\">Avg 10</span>\r\n            <span class=\"value\"></span>\r\n        </div>\r\n        <div class=\"cell nb-losses\">\r\n            <span class=\"header\">Nb Losses</span>\r\n            <span class=\"value\"></span>\r\n        </div>\r\n        <div class=\"cell nb-wins\">\r\n            <span class=\"header\">Nb Wins</span>\r\n            <span class=\"value\"></span>\r\n        </div>\r\n    </div>\r\n    <div class=\"console-text\"></div>\r\n    <div id=\"chartContainer\"></div>\r\n</div>";
 
 function createUI () {
     $("head").append(scripts);
@@ -205,12 +205,13 @@ function changeAmountTo(value) {
 function moveRollUnderCursorTo(value) {
     var rollUnderBar = document.querySelector(".leve1");
     var rect = rollUnderBar.getBoundingClientRect();
-    var xCoord = ((rect.width * value) / 100) + rect.x;
+    var xCoord = ((rect.width * (value + 0.5)) / 100) + rect.x;
     var clickEvent = new MouseEvent("mousedown", {
         view: window,
         clientX: xCoord
     });
     rollUnderBar.dispatchEvent(clickEvent);
+    onRollUnderChangedSubject.next(value);
 }
 
 function recalculateRollAverages() {
@@ -220,12 +221,12 @@ function recalculateRollAverages() {
 }
 
 function processNewBetResult(value) {
-    if (value > rollUnderValue) {
+    if (value >= rollUnderValue) {
         incrementNbLossesValue();
-        addWinLossAmount(0 - betAmountValue);
+        addWinLossAmount(0 - parseFloat(betAmountValue));
     } else {
         incrementNbWinsValue();
-        addWinLossAmount(betAmountValue);
+        addWinLossAmount(parseFloat(betAmountValue));
     }
 
 }
@@ -321,7 +322,8 @@ function waitForGameToInit() {
 }
 
 function testButtonClicked() {
-
+    var n = 76;
+    moveRollUnderCursorTo(n);
 }
 
 var chart;
