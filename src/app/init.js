@@ -39,6 +39,5 @@ export function waitForGameToInit() {
 }
 
 function testButtonClicked() {
-    var n = 76;
-    Utils.moveRollUnderCursorTo(n);
+    Utils.changeAmountTo(0.5);
 }

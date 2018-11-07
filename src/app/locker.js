@@ -14,4 +14,7 @@ export function lockEngineInit() {
             Vars.startOrStopCashMachine(false);
          }
      });
+
+     // TODO: if 5 loss in 6-7 bets, PAUSE 1 min
+     // TODO: if 5 win in a row, PAUSE 1 min ?
 }

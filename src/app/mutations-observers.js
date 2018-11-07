@@ -43,12 +43,6 @@ export function onNewRollResult(mutations, observer) {
 
     if (rollResultElt) {
         var rollResult = document.querySelector(".leve2-roll em").textContent;
-
-        if (Vars.lastRolls.length === 10) {
-            Vars.lastRolls.shift();
-        }
-        Vars.lastRolls.push(parseInt(rollResult));
-        Utils.recalculateRollAverages();
         Monitor.processNewBetResult(parseInt(rollResult));
     }
 }

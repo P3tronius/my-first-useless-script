@@ -24,7 +24,7 @@ export function createUI () {
     // alternative way to position a dialog
     $(".cashmachine-wrapper").parent().css({
         position: "fixed",
-        top: "78px",
+        top: "0px",
         right: "110px",
         left: "initial"
     });

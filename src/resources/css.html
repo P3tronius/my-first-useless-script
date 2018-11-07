@@ -33,9 +33,14 @@
         display: grid;
     }
 
-    .cell .value {
+    .cell .value.red {
         color: red;
     }
+
+    .cell .value.green {
+        color: green;
+    }
+
 
     input.max-loss, input.initial-amount {
         color: black;
@@ -47,6 +52,28 @@
     .inputs {
         padding-bottom: 3px;
         padding-top: 3px;
+    }
+
+    .last-rolls table {
+        width: 100%;
+        text-align: center;
+        height: 20px;
+    }
+
+    .roll-result {
+        border: 1px solid antiquewhite;
+        color: black;
+        width: 10%;
+    }
+
+    .roll-result.empty {
+        background-color: darkgray;
+    }
+    .roll-result.win {
+        background-color: green;
+    }
+    .roll-result.loss {
+        background-color: red;
     }
 
 </style>

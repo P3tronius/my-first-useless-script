@@ -70,7 +70,8 @@ export function setWinLossElt (value) {
     winLossValueElt.text('0 / ' + maxAcceptableLossAmount);
 }
 export function addWinLossAmount (value) {
-    winLossValue = Math.round((winLossValue + value) * 100) / 100;
+    var floatValue = parseFloat(value);
+    winLossValue = parseFloat((winLossValue + floatValue).toFixed(4));
     winLossValueElt.text(winLossValue + ' / ' + maxAcceptableLossAmount);
     winLossAmountSubject.next(winLossValue);
 }
@@ -81,6 +82,12 @@ export function setLooseStatusElt (value) {
 export function setLooseStatusValue (value) {
     looseStatusValue = value;
     looseStatusElt.text(looseStatusValue);
+    looseStatusElt.removeClass("green").removeClass("red")
+    if (looseStatusValue < 0) {
+        looseStatusElt.addClass("red");
+    } else {
+        looseStatusElt.addClass("green");
+    }
 }
 
 export function setRollsAvg5Elt (value) {
@@ -131,6 +138,24 @@ export function setInitialAmount ($event) {
     if ($event.target) {
         initialAmount = parseFloat($event.target.value);
     }
+}
+
+export function addNewRollResult(rollResult, isWin) {
+    if (lastRolls.length === 10) {
+        lastRolls.shift();
+    }
+
+    lastRolls.push({roll: rollResult, win: isWin});
+    lastRolls.forEach(function (roll, idx) {
+        var elt = $($(".roll-result")[idx]);
+        elt.text(roll.roll);
+        elt.removeClass("win").removeClass("loss");
+        if (roll.win) {
+            elt.addClass("win");
+        } else {
+            elt.addClass("loss");
+        }
+    });
 }
 
 export function setConsoleElt (value) {

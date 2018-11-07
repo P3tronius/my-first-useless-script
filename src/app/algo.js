@@ -14,16 +14,18 @@ export async function startCashMachineAlgo() {
 }
 
 function calculateNextBet() {
-    Utils.log("Placing next bet:");
-    placeBet(1, 96);
+    placeBet(0.1, 96);
 
     Vars.startOrStopCashMachine(false);
 }
 
 
 function placeBet(amount, rollUnder) {
+    Utils.log(`Placing next bet: ${amount}@${rollUnder}`);
     Utils.moveRollUnderCursorTo(rollUnder);
     Utils.changeAmountTo(amount);
-    Utils.log("amount:" + `${$("")}`)
-    Utils.clickOnRollButton();
+    setTimeout(function () {
+        Utils.log("amount:" + `${document.querySelector(".tokens-icon.first input").value}`)
+        Utils.clickOnRollButton();
+    }, 50);
  }
