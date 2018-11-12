@@ -1,7 +1,7 @@
 import * as Init from "./init.js";
 import * as Chart from "./chart.js";
 import * as UI from "./ui.js";
-import * as Algo from "./algo.js";
+import * as BetEngine from "./bet-engine.js";
 import * as Vars from "./variables.js";
 import * as Utils from "./utils.js";
 import * as Locker from "./locker.js";
@@ -16,14 +16,16 @@ import * as Locker from "./locker.js";
     Vars.engineStarted.pipe(
         Rx.operators.filter(
             function (state) {
-                return state != undefined;
+                return state !== undefined;
             }
         )).subscribe(function (state) {
             if (!state) {
-                Utils.log("Cash Machine algo STOPPED.");
             } else {
                 Utils.log("Cash Machine algo STARTED.");
-                Algo.startCashMachineAlgo();
+                BetEngine.startCashMachineAlgo().then(
+                () => {
+                    Utils.log("Cash Machine algo STOPPED.");
+                });
             }
         });
 

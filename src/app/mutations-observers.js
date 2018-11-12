@@ -18,7 +18,7 @@ export function onBodyMutate(mutations, observer) {
     }
 }
 
-export function onRollUnderMutate(mutations, observer) {
+export function onRollUnderMutate() {
     var rollUnderEtl = document.querySelector(".content.min50");
     if (rollUnderEtl) {
         var value = rollUnderEtl.textContent.trim();
@@ -33,12 +33,12 @@ export function watchBetAmountChanges() {
     descriptor.set = function(val) {
         Vars.onBetAmountChangedSubject.next(val);
         originalSet.apply(this,arguments);
-    }
+    };
 
     Object.defineProperty(HTMLInputElement.prototype, "value", descriptor);
 }
 
-export function onNewRollResult(mutations, observer) {
+export function onNewRollResult() {
     var rollResultElt = document.querySelector(".leve2-roll em");
 
     if (rollResultElt) {

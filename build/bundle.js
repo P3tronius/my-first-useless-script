@@ -37,14 +37,16 @@ var started = false;
 var startStopElt;
 
 var lastRolls = [];
-var rollsAverage = 0;
-var maxAcceptableLossAmount = 5;
+var maxAcceptableLosedAmount = 5;
 var initialAmount = 0.1;
 
 var initSubject = new Rx.Subject();
 var onRollUnderChangedSubject = new Rx.Subject();
 var onBetAmountChangedSubject = new Rx.Subject();
-var engineStarted = new Rx.Subject(false);
+var onNewBetResultSubject = new Rx.Subject();
+var engineStarted = new Rx.BehaviorSubject(false);
+var enginePaused = new Rx.BehaviorSubject(false);
+
 var winLossAmountSubject = new Rx.Subject(undefined);
 
 // GETTERS AND SETTERS
@@ -53,7 +55,6 @@ function setStartStopElt (value) {
     startStopElt = value;
 }
 function startOrStopCashMachine (value) {
-    var state;
     if (value === false || value === true) {
         started = value;
     } else {
@@ -83,12 +84,12 @@ function setRollUnderValue (value) {
 
 function setWinLossElt (value) {
     winLossValueElt = value;
-    winLossValueElt.text('0 / ' + maxAcceptableLossAmount);
+    winLossValueElt.text('0');
 }
 function addWinLossAmount (value) {
     var floatValue = parseFloat(value);
     winLossValue = parseFloat((winLossValue + floatValue).toFixed(4));
-    winLossValueElt.text(winLossValue + ' / ' + maxAcceptableLossAmount);
+    winLossValueElt.text(winLossValue);
     winLossAmountSubject.next(winLossValue);
 }
 
@@ -104,6 +105,10 @@ function setLooseStatusValue (value) {
     } else {
         looseStatusElt.addClass("green");
     }
+}
+
+function resetLooseStatusValue () {
+    looseStatusValue = 0;
 }
 
 function setRollsAvg5Elt (value) {
@@ -145,8 +150,8 @@ function setMaxAcceptableLossAmount (value) {
     if (value.target) {
         v = parseFloat(value.target.value);
     }
-    maxAcceptableLossAmount = v;
-    winLossValueElt.text(winLossValue + '/' + maxAcceptableLossAmount);
+    maxAcceptableLosedAmount = v;
+    winLossValueElt.text(winLossValue + '/' + maxAcceptableLosedAmount);
     winLossAmountSubject.next(winLossValue);
 }
 
@@ -157,6 +162,7 @@ function setInitialAmount ($event) {
 }
 
 function addNewRollResult(rollResult, isWin) {
+    onNewBetResultSubject.next({roll: rollResult, win: isWin});
     if (lastRolls.length === 10) {
         lastRolls.shift();
     }
@@ -176,59 +182,6 @@ function addNewRollResult(rollResult, isWin) {
 
 function setConsoleElt (value) {
     consoleElt = value;
-}
-
-var scripts = "<link href=\"//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/themes/le-frog/jquery-ui.min.css\" rel=\"stylesheet\" type=\"text/css\">\r\n<script src=\"https://canvasjs.com/assets/script/canvasjs.min.js\"></script>";
-
-var css = "<style type=\"text/css\">\r\n    .cashmachine-wrapper { padding: 0 !important; color: #67c23a; font-size: 12px; line-height: 1; background-color: #1c233f; width: 510px; overflow: scroll; height: 100px;}\r\n    .console-text {  max-height: 160px; height: 160px; overflow-y: auto; }\r\n    .console-text p { margin: 0; padding: 0; color: green; }\r\n    .test-btn { float: right; margin-right: 20px; }\r\n    .avg-value { color: black; font-size: 16px; padding-left: 10px; }\r\n    .ui-dialog-titlebar { padding: 3px !important; line-height: 0.6; }\r\n    .ui-dialog-title { font-size: 10px; padding: 0; margin: 0; height: 7px; overflow: initial !important; }\r\n    .ui-button-icon-only.ui-dialog-titlebar-close { height: 11px; width: 11px; top: 10px; }\r\n    .ui-widget-content { border: 1px solid #41455d; background: #1c233f; color: #ffffff; }\r\n    #chartContainer { height: 170px; padding: 0; }\r\n\r\n    .start-stop {\r\n        cursor: pointer;\r\n    }\r\n    .start-stop.started {\r\n        background-color: green;\r\n    }\r\n    .start-stop.stopped {\r\n        background-color: gray;\r\n    }\r\n\r\n    .monitor {\r\n        padding-left: 1px;\r\n        display: flex;\r\n    }\r\n\r\n    .cell {\r\n        width: 20%;\r\n        height: 50px;\r\n        border: 1px solid brown;\r\n        text-align: center;\r\n        display: grid;\r\n    }\r\n\r\n    .cell .value.red {\r\n        color: red;\r\n    }\r\n\r\n    .cell .value.green {\r\n        color: green;\r\n    }\r\n\r\n\r\n    input.max-loss, input.initial-amount {\r\n        color: black;\r\n        text-align: end;\r\n        width: 50px;\r\n        height: 20px;\r\n    }\r\n\r\n    .inputs {\r\n        padding-bottom: 3px;\r\n        padding-top: 3px;\r\n    }\r\n\r\n    .last-rolls table {\r\n        width: 100%;\r\n        text-align: center;\r\n        height: 20px;\r\n    }\r\n\r\n    .roll-result {\r\n        border: 1px solid antiquewhite;\r\n        color: black;\r\n        width: 10%;\r\n    }\r\n\r\n    .roll-result.empty {\r\n        background-color: darkgray;\r\n    }\r\n    .roll-result.win {\r\n        background-color: green;\r\n    }\r\n    .roll-result.loss {\r\n        background-color: red;\r\n    }\r\n\r\n</style>";
-
-var ui = "<div class=\"cashmachine-wrapper\">\r\n    <div class=\"monitor line1\">\r\n        <div class=\"cell start-stop stopped\">\r\n            <span class=\"header\"></span>\r\n            <span class=\"value\"></span>\r\n        </div>\r\n        <div class=\"cell bet-amount\">\r\n            <span class=\"header\">Bet Amount</span>\r\n            <span class=\"value\"></span>\r\n        </div>\r\n        <div class=\"cell roll-under\">\r\n            <span class=\"header\">Roll Under</span>\r\n            <span class=\"value\"></span>\r\n        </div>\r\n        <div class=\"cell win-loss\">\r\n            <span class=\"header\">Win/Loss Amount</span>\r\n            <span class=\"value\"></span>\r\n        </div>\r\n        <div class=\"cell loose-status\">\r\n            <span class=\"header\">Loose Status</span>\r\n            <span class=\"value\"></span>\r\n        </div>\r\n    </div>\r\n    <div class=\"monitor line2\">\r\n        <div class=\"cell\">\r\n            <input type=\"button\" value=\"Test\" class=\"test-btn\" style=\"width: 100%;\">\r\n        </div>\r\n        <div class=\"cell avg-5\">\r\n            <span class=\"header\">Avg 5</span>\r\n            <span class=\"value\"></span>\r\n        </div>\r\n        <div class=\"cell avg-10\">\r\n            <span class=\"header\">Avg 10</span>\r\n            <span class=\"value\"></span>\r\n        </div>\r\n        <div class=\"cell nb-losses\">\r\n            <span class=\"header\">Nb Losses</span>\r\n            <span class=\"value\"></span>\r\n        </div>\r\n        <div class=\"cell nb-wins\">\r\n            <span class=\"header\">Nb Wins</span>\r\n            <span class=\"value\"></span>\r\n        </div>\r\n    </div>\r\n    <div class=\"inputs\">\r\n        <span>Initial amount:</span>\r\n        <input class=\"initial-amount\" type=\"number\">\r\n        <span>Max loss amount:</span>\r\n        <input class=\"max-loss\" type=\"number\">\r\n    </div>\r\n    <div class=\"console-text\"></div>\r\n    <div class=\"last-rolls\">\r\n        <table>\r\n            <tbody>\r\n                <tr>\r\n                    <td class=\"roll-result empty\"></td>\r\n                    <td class=\"roll-result empty\"></td>\r\n                    <td class=\"roll-result empty\"></td>\r\n                    <td class=\"roll-result empty\"></td>\r\n                    <td class=\"roll-result empty\"></td>\r\n                    <td class=\"roll-result empty\"></td>\r\n                    <td class=\"roll-result empty\"></td>\r\n                    <td class=\"roll-result empty\"></td>\r\n                    <td class=\"roll-result empty\"></td>\r\n                    <td class=\"roll-result empty\"></td>\r\n                </tr>\r\n            </tbody>\r\n        </table>\r\n    </div>\r\n    <div id=\"chartContainer\"></div>\r\n</div>";
-
-function createUI () {
-    $("head").append(scripts);
-    $("head").append(css);
-    $("body").append(ui);
-
-    var opt = {
-        width:      500,
-        minWidth:   400,
-        minHeight:  200,
-        modal:      false,
-        autoOpen:   false,
-        resizable: true,
-        zIndex:     1,
-        title:      'BetDice CashMachine'
-    };
-
-    $(".cashmachine-wrapper").dialog(opt).dialog("open");
-
-    // alternative way to position a dialog
-    $(".cashmachine-wrapper").parent().css({
-        position: "fixed",
-        top: "0px",
-        right: "110px",
-        left: "initial"
-    });
-
-
-    setConsoleElt($(".console-text"));
-    setRollsAvg10Elt($(".avg-10 .value"));
-    setRollsAvg5Elt($(".avg-5 .value"));
-    setBetAmountElt($(".bet-amount .value"));
-    setRollUnderElt($(".roll-under .value"));
-    setWinLossElt($(".win-loss .value"));
-    setLooseStatusElt($(".loose-status .value"));
-    setNbLossesElt($(".nb-losses .value"));
-    setNbWinsElt($(".nb-wins .value"));
-    setStartStopElt($(".start-stop"));
-
-    document.querySelector(".start-stop").addEventListener("click", startOrStopCashMachine);
-    document.querySelector(".max-loss").addEventListener("change", setMaxAcceptableLossAmount);
-    document.querySelector(".initial-amount").addEventListener("change", setInitialAmount);
-
-    document.querySelector(".max-loss").value = maxAcceptableLossAmount;
-    document.querySelector(".initial-amount").value = initialAmount;
-
 }
 
 function log(text) {
@@ -294,18 +247,27 @@ function processNewBetResult(rollResult) {
 
 function recalculateLooseStatus() {
     var total = 0;
-    lastRolls.slice().reverse().forEach(function (elt, idx) {
+    lastRolls.slice(Math.max(lastRolls.length - 4, 0)).forEach(function (elt, idx) {
         var res = elt.roll;
-        if (res > 70) {
-            total += 10 * (idx + 1);
+        if (res > 69) {
+            total += 10 * idx;
         } else if (res > 50) {
-           total += 5 * (idx + 1);
+           total += 5 * idx;
         } else if (res > 25) {
-            total -= 5 * (idx + 1);
+            total -= 5 * idx;
         } else {
-            total -= 10 * (idx + 1);
+            total -= 10 * idx;
         }
     });
+    var totalLessThan75 = 0;
+    lastRolls.forEach(function (elt) {
+        if (elt.roll < 75) {
+            totalLessThan75++;
+        }
+    });
+
+    total += totalLessThan75 * 5;
+
     return total;
 }
 
@@ -325,7 +287,7 @@ function onBodyMutate(mutations, observer) {
     }
 }
 
-function onRollUnderMutate(mutations, observer) {
+function onRollUnderMutate() {
     var rollUnderEtl = document.querySelector(".content.min50");
     if (rollUnderEtl) {
         var value = rollUnderEtl.textContent.trim();
@@ -345,7 +307,7 @@ function watchBetAmountChanges() {
     Object.defineProperty(HTMLInputElement.prototype, "value", descriptor);
 }
 
-function onNewRollResult(mutations, observer) {
+function onNewRollResult() {
     var rollResultElt = document.querySelector(".leve2-roll em");
 
     if (rollResultElt) {
@@ -353,35 +315,6 @@ function onNewRollResult(mutations, observer) {
         processNewBetResult(parseInt(rollResult));
     }
 }
-
-// checks the status of the engine on each iteration (i.e. will stop before next bet if engine stopped)
-async function startCashMachineAlgo() {
-
-    while (started) {
-        await sleep(1000 + Math.floor(Math.random() * Math.floor(1000)));
-         if (started) {
-            calculateNextBet();
-        }
-    }
-
-}
-
-function calculateNextBet() {
-    placeBet(0.1, 96);
-
-    startOrStopCashMachine(false);
-}
-
-
-function placeBet(amount, rollUnder) {
-    log(`Placing next bet: ${amount}@${rollUnder}`);
-    moveRollUnderCursorTo(rollUnder);
-    changeAmountTo(amount);
-    setTimeout(function () {
-        log("amount:" + `${document.querySelector(".tokens-icon.first input").value}`);
-        clickOnRollButton();
-    }, 50);
- }
 
 function waitForGameToInit() {
     new MutationObserver(onBodyMutate).observe(document.querySelector("body"), { childList: true });
@@ -574,19 +507,161 @@ function setupChartPoints() {
         });
 }
 
+var scripts = "<link href=\"//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/themes/le-frog/jquery-ui.min.css\" rel=\"stylesheet\" type=\"text/css\">\n<script src=\"https://canvasjs.com/assets/script/canvasjs.min.js\"></script>";
+
+var css = "<style type=\"text/css\">\n    .cashmachine-wrapper { padding: 0 !important; color: #67c23a; font-size: 12px; line-height: 1; background-color: #1c233f; width: 510px; overflow: scroll; height: 100px;}\n    .console-text {  max-height: 160px; height: 160px; overflow-y: auto; }\n    .console-text p { margin: 0; padding: 0; color: green; }\n    .test-btn { float: right; margin-right: 20px; }\n    .avg-value { color: black; font-size: 16px; padding-left: 10px; }\n    .ui-dialog-titlebar { padding: 3px !important; line-height: 0.6; }\n    .ui-dialog-title { font-size: 10px; padding: 0; margin: 0; height: 7px; overflow: initial !important; }\n    .ui-button-icon-only.ui-dialog-titlebar-close { height: 11px; width: 11px; top: 10px; }\n    .ui-widget-content { border: 1px solid #41455d; background: #1c233f; color: #ffffff; }\n    #chartContainer { height: 170px; padding: 0; }\n\n    .start-stop {\n        cursor: pointer;\n    }\n    .start-stop.started {\n        background-color: green;\n    }\n    .start-stop.stopped {\n        background-color: gray;\n    }\n\n    .monitor {\n        padding-left: 1px;\n        display: flex;\n    }\n\n    .cell {\n        width: 20%;\n        height: 50px;\n        border: 1px solid brown;\n        text-align: center;\n        display: grid;\n    }\n\n    .cell .value.red {\n        color: red;\n    }\n\n    .cell .value.green {\n        color: green;\n    }\n\n\n    input.max-loss, input.initial-amount {\n        color: black;\n        text-align: end;\n        width: 50px;\n        height: 20px;\n    }\n\n    .inputs {\n        padding-bottom: 3px;\n        padding-top: 3px;\n    }\n\n    .last-rolls table {\n        width: 100%;\n        text-align: center;\n        height: 20px;\n    }\n\n    .roll-result {\n        border: 1px solid antiquewhite;\n        color: black;\n        width: 10%;\n    }\n\n    .roll-result.empty {\n        background-color: darkgray;\n    }\n    .roll-result.win {\n        background-color: green;\n    }\n    .roll-result.loss {\n        background-color: red;\n    }\n\n</style>";
+
+var ui = "<div class=\"cashmachine-wrapper\">\n    <div class=\"monitor line1\">\n        <div class=\"cell start-stop stopped\">\n            <span class=\"header\"></span>\n            <span class=\"value\"></span>\n        </div>\n        <div class=\"cell bet-amount\">\n            <span class=\"header\">Bet Amount</span>\n            <span class=\"value\"></span>\n        </div>\n        <div class=\"cell roll-under\">\n            <span class=\"header\">Roll Under</span>\n            <span class=\"value\"></span>\n        </div>\n        <div class=\"cell win-loss\">\n            <span class=\"header\">Win/Loss Amount</span>\n            <span class=\"value\"></span>\n        </div>\n        <div class=\"cell loose-status\">\n            <span class=\"header\">Loose Status</span>\n            <span class=\"value\"></span>\n        </div>\n    </div>\n    <div class=\"monitor line2\">\n        <div class=\"cell\">\n            <input type=\"button\" value=\"Test\" class=\"test-btn\" style=\"width: 100%;\">\n        </div>\n        <div class=\"cell avg-5\">\n            <span class=\"header\">Avg 5</span>\n            <span class=\"value\"></span>\n        </div>\n        <div class=\"cell avg-10\">\n            <span class=\"header\">Avg 10</span>\n            <span class=\"value\"></span>\n        </div>\n        <div class=\"cell nb-losses\">\n            <span class=\"header\">Nb Losses</span>\n            <span class=\"value\"></span>\n        </div>\n        <div class=\"cell nb-wins\">\n            <span class=\"header\">Nb Wins</span>\n            <span class=\"value\"></span>\n        </div>\n    </div>\n    <div class=\"inputs\">\n        <span>Initial amount:</span>\n        <input class=\"initial-amount\" type=\"number\">\n        <span>Max loss amount:</span>\n        <input class=\"max-loss\" type=\"number\">\n    </div>\n    <div class=\"console-text\"></div>\n    <div class=\"last-rolls\">\n        <table>\n            <tbody>\n                <tr>\n                    <td class=\"roll-result empty\"></td>\n                    <td class=\"roll-result empty\"></td>\n                    <td class=\"roll-result empty\"></td>\n                    <td class=\"roll-result empty\"></td>\n                    <td class=\"roll-result empty\"></td>\n                    <td class=\"roll-result empty\"></td>\n                    <td class=\"roll-result empty\"></td>\n                    <td class=\"roll-result empty\"></td>\n                    <td class=\"roll-result empty\"></td>\n                    <td class=\"roll-result empty\"></td>\n                </tr>\n            </tbody>\n        </table>\n    </div>\n    <div id=\"chartContainer\"></div>\n</div>";
+
+function createUI () {
+
+    let head = $("head");
+    head.append(scripts);
+    head.append(css);
+    $("body").append(ui);
+
+    var opt = {
+        width:      500,
+        minWidth:   400,
+        minHeight:  200,
+        modal:      false,
+        autoOpen:   false,
+        resizable: true,
+        zIndex:     1,
+        title:      'BetDice CashMachine'
+    };
+
+    let cashmachine = $(".cashmachine-wrapper");
+    cashmachine.dialog(opt).dialog("open");
+
+    // alternative way to position a dialog
+    cashmachine.parent().css({
+        position: "fixed",
+        top: "0px",
+        right: "110px",
+        left: "initial"
+    });
+
+
+    setConsoleElt($(".console-text"));
+    setRollsAvg10Elt($(".avg-10 .value"));
+    setRollsAvg5Elt($(".avg-5 .value"));
+    setBetAmountElt($(".bet-amount .value"));
+    setRollUnderElt($(".roll-under .value"));
+    setWinLossElt($(".win-loss .value"));
+    setLooseStatusElt($(".loose-status .value"));
+    setNbLossesElt($(".nb-losses .value"));
+    setNbWinsElt($(".nb-wins .value"));
+    setStartStopElt($(".start-stop"));
+
+    document.querySelector(".start-stop").addEventListener("click", startOrStopCashMachine);
+    document.querySelector(".max-loss").addEventListener("change", setMaxAcceptableLossAmount);
+    document.querySelector(".initial-amount").addEventListener("change", setInitialAmount);
+
+    document.querySelector(".max-loss").value = maxAcceptableLosedAmount;
+    document.querySelector(".initial-amount").value = initialAmount;
+
+}
+
+// checks the status of the engine on each iteration (i.e. will stop before next bet if engine stopped)
+async function startCashMachineAlgo() {
+
+    while (started) {
+        if (enginePaused.getValue()) {
+            await sleep(5000 + Math.floor(Math.random() * Math.floor(1000)));
+            resetLooseStatusValue();
+            enginePaused.next(false);
+        }
+
+        await sleep(1000 + Math.floor(Math.random() * Math.floor(1000)));
+        if (started) {
+            await calculateNextBet();
+        }
+    }
+
+}
+
+function calculateNextBet() {
+    var amount = initialAmount;
+    var rollUnder = 75;
+
+    if (looseStatusValue > 20) {
+        amount += amount;
+        rollUnder = 75;
+    }
+
+    if (looseStatusValue > 0 && looseStatusValue < 20) {
+        amount -= amount * 0.5;
+        rollUnder = 75;
+    }
+    if (looseStatusValue < -20) {
+        amount = 0.1;
+        rollUnder = 96;
+    }
+    if (looseStatusValue < 0 && looseStatusValue > -20) {
+        amount -= amount * 0.5;
+        rollUnder = 75;
+    }
+
+    return placeBet(amount, rollUnder);
+}
+
+
+function placeBet(amount, rollUnder) {
+    log(`Placing next bet: ${amount}@${rollUnder}`);
+    moveRollUnderCursorTo(rollUnder);
+    changeAmountTo(amount);
+    return runBet();
+}
+
+async function runBet() {
+    await sleep(50);
+    clickOnRollButton();
+    await onNewBetResultSubject.take(1).toPromise();
+}
+
 function lockEngineInit() {
     winLossAmountSubject.pipe(
          Rx.operators.filter(
              function (amount) {
-                 return amount != undefined;
+                 return amount !== undefined;
              }
          )
      ).subscribe(function (amount) {
-         if (amount > maxAcceptableLossAmount) {
-            log("Max loosed amount exceeded, forcing stop.");
+         if (mustBeLocked(amount)) {
             startOrStopCashMachine(false);
          }
      });
+
+    // if 4 loss in 5 bets, pause
+     // TODO: if 5 loss in 7 bets, PAUSE 1 min
+     // TODO: if 5 win in a row, PAUSE 1 min ?
+}
+
+function mustBeLocked(amount) {
+    if (started && amount > maxAcceptableLosedAmount) {
+        log("Max losed amount exceeded, forcing stop.");
+        return true;
+    }
+    if (looseStatusValue > 30) {
+        log("Too many luck, pausing for a while");
+        enginePaused.next(true);
+    }
+    if (looseStatusValue < -20) {
+        log("Too many loose, pausing for a while");
+        enginePaused.next(true);
+    }
+    var nbLosses = 0;
+    lastRolls.forEach(function (elt) {
+        if (elt.roll > 75) {
+            nbLosses++;
+        }
+    });
+    if (nbLosses > 5) {
+        log("Too many losses in a row, pausing for a while");
+        enginePaused.next(true);
+    }
+    return false;
 }
 
 (function() {
@@ -599,14 +674,16 @@ function lockEngineInit() {
     engineStarted.pipe(
         Rx.operators.filter(
             function (state) {
-                return state != undefined;
+                return state !== undefined;
             }
         )).subscribe(function (state) {
             if (!state) {
-                log("Cash Machine algo STOPPED.");
             } else {
                 log("Cash Machine algo STARTED.");
-                startCashMachineAlgo();
+                startCashMachineAlgo().then(
+                () => {
+                    log("Cash Machine algo STOPPED.");
+                });
             }
         });
 

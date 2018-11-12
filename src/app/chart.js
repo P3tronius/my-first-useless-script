@@ -1,5 +1,3 @@
-import * as MutationObs from "./mutations-observers.js";
-import * as Vars from "./variables.js";
 import * as Utils from "./utils.js";
 
 var chart;

@@ -1,6 +1,5 @@
 import * as MutationsObs from "./mutations-observers.js";
 import * as Utils from "./utils.js";
-import * as Algo from "./algo.js";
 import * as Vars from "./variables.js";
 
 export function waitForGameToInit() {

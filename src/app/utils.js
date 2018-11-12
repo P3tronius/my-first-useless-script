@@ -1,8 +1,7 @@
-import * as UI from "./ui.js";
 import * as Vars from "./variables.js";
 
 export function log(text) {
-    Vars.consoleElt.append("<p>" + text + "</p>")
+    Vars.consoleElt.append("<p>" + text + "</p>");
     Vars.consoleElt.scrollTop(Vars.consoleElt[0].scrollHeight);
 }
 
@@ -42,6 +41,6 @@ export function clickOnRollButton() {
 
 export function recalculateRollAverages() {
     Vars.setRollsAvg10Value(Vars.lastRolls.map((x) => x.roll).reduce((a, b) => a + b, 0) / Vars.lastRolls.length);
-    var last5Rolls = Vars.lastRolls.slice(Math.max(Vars.lastRolls.length - 5, 0))
+    var last5Rolls = Vars.lastRolls.slice(Math.max(Vars.lastRolls.length - 5, 0));
     Vars.setRollsAvg5Value(last5Rolls.map((x) => x.roll).reduce((a, b) => a + b, 0) / last5Rolls.length);
 }

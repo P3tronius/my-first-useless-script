@@ -21,14 +21,16 @@ export var started = false;
 var startStopElt;
 
 export var lastRolls = [];
-export var rollsAverage = 0;
-export var maxAcceptableLossAmount = 5;
+export var maxAcceptableLosedAmount = 5;
 export var initialAmount = 0.1;
 
 export var initSubject = new Rx.Subject();
 export var onRollUnderChangedSubject = new Rx.Subject();
 export var onBetAmountChangedSubject = new Rx.Subject();
-export var engineStarted = new Rx.Subject(false);
+export var onNewBetResultSubject = new Rx.Subject();
+export var engineStarted = new Rx.BehaviorSubject(false);
+export var enginePaused = new Rx.BehaviorSubject(false);
+
 export var winLossAmountSubject = new Rx.Subject(undefined);
 
 // GETTERS AND SETTERS
@@ -37,7 +39,6 @@ export function setStartStopElt (value) {
     startStopElt = value;
 }
 export function startOrStopCashMachine (value) {
-    var state;
     if (value === false || value === true) {
         started = value;
     } else {
@@ -67,12 +68,12 @@ export function setRollUnderValue (value) {
 
 export function setWinLossElt (value) {
     winLossValueElt = value;
-    winLossValueElt.text('0 / ' + maxAcceptableLossAmount);
+    winLossValueElt.text('0');
 }
 export function addWinLossAmount (value) {
     var floatValue = parseFloat(value);
     winLossValue = parseFloat((winLossValue + floatValue).toFixed(4));
-    winLossValueElt.text(winLossValue + ' / ' + maxAcceptableLossAmount);
+    winLossValueElt.text(winLossValue);
     winLossAmountSubject.next(winLossValue);
 }
 
@@ -82,12 +83,16 @@ export function setLooseStatusElt (value) {
 export function setLooseStatusValue (value) {
     looseStatusValue = value;
     looseStatusElt.text(looseStatusValue);
-    looseStatusElt.removeClass("green").removeClass("red")
+    looseStatusElt.removeClass("green").removeClass("red");
     if (looseStatusValue < 0) {
         looseStatusElt.addClass("red");
     } else {
         looseStatusElt.addClass("green");
     }
+}
+
+export function resetLooseStatusValue () {
+    looseStatusValue = 0;
 }
 
 export function setRollsAvg5Elt (value) {
@@ -129,8 +134,8 @@ export function setMaxAcceptableLossAmount (value) {
     if (value.target) {
         v = parseFloat(value.target.value);
     }
-    maxAcceptableLossAmount = v;
-    winLossValueElt.text(winLossValue + '/' + maxAcceptableLossAmount);
+    maxAcceptableLosedAmount = v;
+    winLossValueElt.text(winLossValue + '/' + maxAcceptableLosedAmount);
     winLossAmountSubject.next(winLossValue);
 }
 
@@ -141,6 +146,7 @@ export function setInitialAmount ($event) {
 }
 
 export function addNewRollResult(rollResult, isWin) {
+    onNewBetResultSubject.next({roll: rollResult, win: isWin});
     if (lastRolls.length === 10) {
         lastRolls.shift();
     }

@@ -4,8 +4,10 @@ import * as css from "../resources/css.html";
 import * as html from "../resources/ui.html";
 
 export function createUI () {
-    $("head").append(scripts.default);
-    $("head").append(css.default);
+
+    let head = $("head");
+    head.append(scripts.default);
+    head.append(css.default);
     $("body").append(html.default);
 
     var opt = {
@@ -19,10 +21,11 @@ export function createUI () {
         title:      'BetDice CashMachine'
     };
 
-    $(".cashmachine-wrapper").dialog(opt).dialog("open");
+    let cashmachine = $(".cashmachine-wrapper");
+    cashmachine.dialog(opt).dialog("open");
 
     // alternative way to position a dialog
-    $(".cashmachine-wrapper").parent().css({
+    cashmachine.parent().css({
         position: "fixed",
         top: "0px",
         right: "110px",
@@ -45,7 +48,7 @@ export function createUI () {
     document.querySelector(".max-loss").addEventListener("change", Vars.setMaxAcceptableLossAmount);
     document.querySelector(".initial-amount").addEventListener("change", Vars.setInitialAmount);
 
-    document.querySelector(".max-loss").value = Vars.maxAcceptableLossAmount;
+    document.querySelector(".max-loss").value = Vars.maxAcceptableLosedAmount;
     document.querySelector(".initial-amount").value = Vars.initialAmount;
 
 }

@@ -19,17 +19,26 @@ export function processNewBetResult(rollResult) {
 
 function recalculateLooseStatus() {
     var total = 0;
-    Vars.lastRolls.slice().reverse().forEach(function (elt, idx) {
+    Vars.lastRolls.slice(Math.max(Vars.lastRolls.length - 4, 0)).forEach(function (elt, idx) {
         var res = elt.roll;
-        if (res > 70) {
-            total += 10 * (idx + 1);
+        if (res > 69) {
+            total += 10 * idx;
         } else if (res > 50) {
-           total += 5 * (idx + 1);
+           total += 5 * idx;
         } else if (res > 25) {
-            total -= 5 * (idx + 1);
+            total -= 5 * idx;
         } else {
-            total -= 10 * (idx + 1);
+            total -= 10 * idx;
         }
     });
+    var totalLessThan75 = 0;
+    Vars.lastRolls.forEach(function (elt) {
+        if (elt.roll < 75) {
+            totalLessThan75++;
+        }
+    });
+
+    total += totalLessThan75 * 5;
+
     return total;
 }
