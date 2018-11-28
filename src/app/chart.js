@@ -1,12 +1,20 @@
 import * as Utils from "./utils.js";
 
 var chart;
+var chartMutationObs;
 
 export function createChart() {
-    setTimeout(function () {
-        resetChart();
-        new MutationObserver(onTableTabMutate).observe(document.querySelector(".table-list .tabs"), { attributes: true, subtree: true });
-    }, 3000);
+    if (document.querySelector(".table-list .tabs") instanceof Node) {
+        setTimeout(function () {
+            resetChart();
+            new MutationObserver(onTableTabMutate).observe(document.querySelector(".table-list .tabs"), {
+                attributes: true,
+                subtree: true
+            });
+        }, 3000);
+    } else {
+        setTimeout(() => createChart(), 1000);
+    }
 }
 
 async function resetChart() {
@@ -15,7 +23,11 @@ async function resetChart() {
     while (wait) {
         await Utils.sleep(500);
         if (document.querySelector(".table-list tbody tr td:nth-child(5)")) {
-            new MutationObserver(onTableResultsMutate).observe(document.querySelector(".table-list tbody tr td:nth-child(5)"), { characterData: true, subtree: true, childList: true });
+            if (chartMutationObs) {
+                chartMutationObs.disconnect();
+            }
+            chartMutationObs = new MutationObserver(onTableResultsMutate);
+            chartMutationObs.observe(document.querySelector(".table-list tbody tr td:nth-child(5)"), { characterData: true, subtree: true, childList: true });
             wait = false;
         }
     }

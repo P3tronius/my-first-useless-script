@@ -41,8 +41,7 @@
         color: green;
     }
 
-
-    input.max-loss, input.initial-amount {
+    .inputs > input {
         color: black;
         text-align: end;
         width: 50px;
@@ -52,6 +51,14 @@
     .inputs {
         padding-bottom: 3px;
         padding-top: 3px;
+    }
+
+    p.won {
+        color: greenyellow;
+    }
+
+    p.lost {
+        color: firebrick;
     }
 
     .last-rolls table {
@@ -70,7 +77,10 @@
         background-color: darkgray;
     }
     .roll-result.win {
-        background-color: green;
+         background-color: green;
+    }
+    .roll-result.win-high {
+        background-color: darkgreen;
     }
     .roll-result.loss {
         background-color: red;

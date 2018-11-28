@@ -5,8 +5,33 @@ export function log(text) {
     Vars.consoleElt.scrollTop(Vars.consoleElt[0].scrollHeight);
 }
 
+export function logLastBetWinStatus(winOrLoss) {
+    var text = $(".console-text p:last-child")[0].textContent;
+    var winText = " Win";
+    var lostText = " Lost";
+
+    if (text.startsWith("Placing")) {
+        $(".console-text p:last-child")[0].textContent += winOrLoss ? winText : lostText;
+        $(".console-text p:last-child")[0].classList.add(winOrLoss ? "won" : "lost");
+    } else {
+        var idx = 1;
+        var element = $(`.console-text p:nth-last-child(${idx})`)[0];
+        while (element !== undefined) {
+            text = element.textContent;
+            if (text.startsWith("Placing")) {
+                $(`.console-text p:nth-last-child(${idx})`)[0].textContent += winOrLoss ? winText : lostText;
+                $(`.console-text p:nth-last-child(${idx})`)[0].classList.add(winOrLoss ? "won" : "lost");
+                break;
+            }
+            idx++;
+            element = $(`.console-text p:nth-last-child(${idx})`)[0];
+        }
+    }
+}
+
 export function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+    log("waiting " + ms + "ms");
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 

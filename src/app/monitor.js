@@ -3,7 +3,7 @@ import * as Utils from "./utils.js";
 
 export function processNewBetResult(rollResult) {
     var win = false;
-    if (rollResult >= Vars.rollUnderValue) {
+    if (rollResult > Vars.rollUnderValue) {
         Vars.incrementNbLossesValue();
         Vars.addWinLossAmount(0 - parseFloat(Vars.betAmountValue));
     } else {
@@ -14,31 +14,73 @@ export function processNewBetResult(rollResult) {
     }
     Vars.addNewRollResult(parseInt(rollResult), win);
     Utils.recalculateRollAverages();
-    Vars.setLooseStatusValue(recalculateLooseStatus());
+    Vars.setLooseStatusValue(recalculateNextBetValue());
+    Utils.logLastBetWinStatus(win);
 }
 
-function recalculateLooseStatus() {
-    var total = 0;
-    Vars.lastRolls.slice(Math.max(Vars.lastRolls.length - 4, 0)).forEach(function (elt, idx) {
-        var res = elt.roll;
-        if (res > 69) {
-            total += 10 * idx;
-        } else if (res > 50) {
-           total += 5 * idx;
-        } else if (res > 25) {
-            total -= 5 * idx;
-        } else {
-            total -= 10 * idx;
-        }
-    });
-    var totalLessThan75 = 0;
-    Vars.lastRolls.forEach(function (elt) {
-        if (elt.roll < 75) {
-            totalLessThan75++;
-        }
-    });
+function recalculateNextBetValue() {
+   return recalculateNextBetValueAgressive();
+   // return recalculateNextBetValue ();
+}
 
-    total += totalLessThan75 * 5;
+function recalculateNextBetValueAgressive() {
+    var total = 0;
+
+    var n10 = Vars.lastRolls[Vars.lastRolls.length - 1];
+    var n9 = Vars.lastRolls[Vars.lastRolls.length - 2];
+    var n8 = Vars.lastRolls[Vars.lastRolls.length - 3];
+    var n7 = Vars.lastRolls[Vars.lastRolls.length - 4];
+    var n6 = Vars.lastRolls[Vars.lastRolls.length - 5];
+    var n5 = Vars.lastRolls[Vars.lastRolls.length - 6];
+    var n4 = Vars.lastRolls[Vars.lastRolls.length - 7];
+    var n3 = Vars.lastRolls[Vars.lastRolls.length - 8];
+    var n2 = Vars.lastRolls[Vars.lastRolls.length - 9];
+    var n1 = Vars.lastRolls[Vars.lastRolls.length - 10];
+
+    n10 = n10 !== undefined ? n10.roll : undefined;
+    n9 = n9 !== undefined ? n9.roll : undefined;
+    n8 = n8 !== undefined ? n8.roll : undefined;
+    n7 = n7 !== undefined ? n7.roll : undefined;
+
+    if (n10 >= 75) {
+        total += 1;
+    } else if (n10 >= 50) {
+        total += 0.5;
+    } else if (n10 >= 25) {
+        total -= 0.5;
+    } else if (n10 >= 0) {
+        total -= 1;
+    }
+
+    if (n9 >= 75) {
+        total += 0.8;
+    } else if (n9 >= 50) {
+        total += 0.4;
+    } else if (n9 >= 25) {
+        total -= 0.4;
+    } else if (n9 >= 0) {
+        total -= 0.8;
+    }
+
+    if (n8 >= 75) {
+        total += 0.6;
+    } else if (n8 >= 50) {
+        total += 0.3;
+    } else if (n8 >= 25) {
+        total -= 0.3;
+    } else if (n8 >= 25) {
+        total -= 0.6;
+    }
+
+    if (n7 >= 75) {
+        total += 0.5;
+    } else if (n7 >= 50) {
+        total += 0.2;
+    } else if (n7 >= 25) {
+        total -= 0.2;
+    } else if (n7 >= 25) {
+        total -= 0.5;
+    }
 
     return total;
 }

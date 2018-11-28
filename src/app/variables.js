@@ -1,3 +1,5 @@
+import * as Utils from "./utils";
+
 export var consoleElt;
 
 export var rollsAvg10Value;
@@ -8,8 +10,8 @@ export var rollUnderValue;
 var rollUnderElt;
 export var betAmountValue;
 var betAmountElt;
-export var looseStatusValue;
-var looseStatusElt;
+export var nextBetGuessValue;
+var nextBetGuessElt;
 export var nbLossesValue = 0;
 var nbLossesElt;
 export var nbWinsValue = 0;
@@ -17,19 +19,18 @@ var nbWinsElt;
 export var winLossValue = 0;
 var winLossValueElt;
 
-export var started = false;
 var startStopElt;
 
 export var lastRolls = [];
 export var maxAcceptableLosedAmount = 5;
-export var initialAmount = 0.1;
-
+export var initialAmount = 1;
+export var maxGainBeforeStopping = 10;
 export var initSubject = new Rx.Subject();
 export var onRollUnderChangedSubject = new Rx.Subject();
 export var onBetAmountChangedSubject = new Rx.Subject();
 export var onNewBetResultSubject = new Rx.Subject();
 export var engineStarted = new Rx.BehaviorSubject(false);
-export var enginePaused = new Rx.BehaviorSubject(false);
+export var enginePaused = new Rx.BehaviorSubject(0);
 
 export var winLossAmountSubject = new Rx.Subject(undefined);
 
@@ -39,6 +40,7 @@ export function setStartStopElt (value) {
     startStopElt = value;
 }
 export function startOrStopCashMachine (value) {
+    var started = engineStarted.getValue();
     if (value === false || value === true) {
         started = value;
     } else {
@@ -77,22 +79,22 @@ export function addWinLossAmount (value) {
     winLossAmountSubject.next(winLossValue);
 }
 
-export function setLooseStatusElt (value) {
-    looseStatusElt = value;
+export function setNextBetGuessElt (value) {
+    nextBetGuessElt = value;
 }
 export function setLooseStatusValue (value) {
-    looseStatusValue = value;
-    looseStatusElt.text(looseStatusValue);
-    looseStatusElt.removeClass("green").removeClass("red");
-    if (looseStatusValue < 0) {
-        looseStatusElt.addClass("red");
+    nextBetGuessValue = value;
+    nextBetGuessElt.text(nextBetGuessValue);
+    nextBetGuessElt.removeClass("green").removeClass("red");
+    if (nextBetGuessValue < 0) {
+        nextBetGuessElt.addClass("red");
     } else {
-        looseStatusElt.addClass("green");
+        nextBetGuessElt.addClass("green");
     }
 }
 
 export function resetLooseStatusValue () {
-    looseStatusValue = 0;
+    nextBetGuessValue = 0;
 }
 
 export function setRollsAvg5Elt (value) {
@@ -135,13 +137,21 @@ export function setMaxAcceptableLossAmount (value) {
         v = parseFloat(value.target.value);
     }
     maxAcceptableLosedAmount = v;
-    winLossValueElt.text(winLossValue + '/' + maxAcceptableLosedAmount);
-    winLossAmountSubject.next(winLossValue);
+    Utils.log(`Updated maxAcceptableLosedAmount to ${maxAcceptableLosedAmount}`);
+}
+
+export function setMaxGainBeforeStopping(value) {
+    var v = value;
+    if (value.target) {
+        v = parseFloat(value.target.value);
+    }
+    maxGainBeforeStopping = v;
 }
 
 export function setInitialAmount ($event) {
     if ($event.target) {
         initialAmount = parseFloat($event.target.value);
+        Utils.log(`Initial amount changed to ${initialAmount}`);
     }
 }
 
@@ -155,9 +165,12 @@ export function addNewRollResult(rollResult, isWin) {
     lastRolls.forEach(function (roll, idx) {
         var elt = $($(".roll-result")[idx]);
         elt.text(roll.roll);
-        elt.removeClass("win").removeClass("loss");
+        elt.removeClass("win").removeClass("win-high").removeClass("loss");
         if (roll.win) {
             elt.addClass("win");
+            if (roll.roll >= 75) {
+                elt.addClass("win-high");
+            }
         } else {
             elt.addClass("loss");
         }

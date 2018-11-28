@@ -39,16 +39,19 @@ export function createUI () {
     Vars.setBetAmountElt($(".bet-amount .value"));
     Vars.setRollUnderElt($(".roll-under .value"));
     Vars.setWinLossElt($(".win-loss .value"));
-    Vars.setLooseStatusElt($(".loose-status .value"));
+    Vars.setNextBetGuessElt($(".next-bet-guess .value"));
     Vars.setNbLossesElt($(".nb-losses .value"));
     Vars.setNbWinsElt($(".nb-wins .value"));
     Vars.setStartStopElt($(".start-stop"));
 
     document.querySelector(".start-stop").addEventListener("click", Vars.startOrStopCashMachine);
     document.querySelector(".max-loss").addEventListener("change", Vars.setMaxAcceptableLossAmount);
+    document.querySelector(".max-gains").addEventListener("change", Vars.setMaxGainBeforeStopping);
+
     document.querySelector(".initial-amount").addEventListener("change", Vars.setInitialAmount);
 
     document.querySelector(".max-loss").value = Vars.maxAcceptableLosedAmount;
     document.querySelector(".initial-amount").value = Vars.initialAmount;
+    document.querySelector(".max-gains").value = Vars.maxGainBeforeStopping;
 
 }
