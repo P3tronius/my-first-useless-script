@@ -1,11 +1,13 @@
 import * as Vars from "./variables.js";
 import * as Utils from "./utils.js";
+import * as MutationsObs from "./mutations-observers";
 
 var amount;
 var rollUnder;
 
 // checks the status of the engine on each iteration (i.e. will stop before next bet if engine stopped)
 export async function startCashMachineAlgo() {
+    new MutationObserver(MutationsObs.onErrorDialog).observe(document.querySelector("body"), { childList: true, subtree: true});
 
     while (Vars.engineStarted.getValue() === true) {
         if (Vars.enginePaused.getValue() > 0) {
@@ -21,7 +23,7 @@ export async function startCashMachineAlgo() {
             await Utils.sleep(2000 + Math.floor(Math.random() * Math.floor(1000)));
         }
     }
-
+    Utils.log("Exiting while loop");
 }
 
 function calculateNextBet() {
@@ -54,6 +56,7 @@ function placeBet() {
     Utils.log(`Placing next bet: ${amount}@${rollUnder}`);
     Utils.moveRollUnderCursorTo(rollUnder);
     Utils.changeAmountTo(amount);
+    Vars.setLastBetAmountValue(amount);
     return runBet();
 }
 
@@ -74,7 +77,7 @@ function waitIfNeeded() {
         Vars.enginePaused.next(10000);
     }
     if (Vars.rollsAvg5Value > 70) {
-        Utils.log("Pause for 10s (average 5 > 75)");
+        Utils.log("Pause for 10s (average 5 > 70)");
         Vars.enginePaused.next(10000);
     }
     var nbLosses = 0;

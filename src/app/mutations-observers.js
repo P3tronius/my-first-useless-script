@@ -46,3 +46,13 @@ export function onNewRollResult() {
         Monitor.processNewBetResult(parseInt(rollResult));
     }
 }
+
+export function onErrorDialog(mutations, observer) {
+    var dialog = $(".el-message");
+    if (dialog && /CPU/.exec(dialog.text())) {
+        Utils.log("CPU shortage, pausing for 10 minutes.");
+        Vars.enginePaused.next(600000);
+        dialog.detach();
+        observer.disconnect();
+    }
+}

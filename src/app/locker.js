@@ -26,6 +26,10 @@ function mustBeLocked(winLossAmount) {
             Utils.log("Max losed amount exceeded, forcing stop.");
             return true;
         }
+        if (winLossAmount > Vars.maxGainBeforeStopping) {
+            Utils.log("Win amount reached, stopping! :-D");
+            return true;
+        }
     }
 
     return false;

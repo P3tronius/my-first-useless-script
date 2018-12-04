@@ -23,6 +23,7 @@ var rollsAvg5Elt;
 var rollUnderValue;
 var rollUnderElt;
 var betAmountValue;
+var lastBetAmountValue;
 var betAmountElt;
 var nextBetGuessValue;
 var nextBetGuessElt;
@@ -72,6 +73,10 @@ function setBetAmountElt (value) {
 function setBetAmountValue (value) {
     betAmountValue = value;
     betAmountElt.text(betAmountValue);
+}
+
+function setLastBetAmountValue (value) {
+    lastBetAmountValue = value;
 }
 
 function setRollUnderElt (value) {
@@ -267,14 +272,24 @@ function recalculateRollAverages() {
 
 function processNewBetResult(rollResult) {
     var win = false;
-    if (rollResult > rollUnderValue) {
+    var tooltipAmount = $(".notification-comp p");
+    var tooltipBetAmount = $(".notification-comp h5");
+
+
+    if (rollResult >= rollUnderValue) {
         incrementNbLossesValue();
-        addWinLossAmount(0 - parseFloat(betAmountValue));
+
+        var amountLost = parseFloat(tooltipAmount.text().substr(tooltipAmount.text().indexOf("lost ") + 4, 6));
+
+        addWinLossAmount(0 - amountLost);
     } else {
         win = true;
         incrementNbWinsValue();
-        var winTooltip = $(".notification-comp.success p");
-        addWinLossAmount((parseFloat(winTooltip.text().substr(winTooltip.text().indexOf("win ") + 4, 6)) - parseFloat(betAmountValue)).toFixed(4));
+
+        var amountWinned = parseFloat(tooltipAmount.text().substr(tooltipAmount.text().indexOf("win ") + 4, 6));
+        var amountBet = parseFloat(tooltipBetAmount.text().substr(tooltipBetAmount.text().indexOf("bet ") + 4, 6));
+
+        addWinLossAmount((amountWinned - amountBet).toFixed(4));
     }
     addNewRollResult(parseInt(rollResult), win);
     recalculateRollAverages();
@@ -391,6 +406,16 @@ function onNewRollResult() {
     if (rollResultElt) {
         var rollResult = document.querySelector(".leve2-roll em").textContent;
         processNewBetResult(parseInt(rollResult));
+    }
+}
+
+function onErrorDialog(mutations, observer) {
+    var dialog = $(".el-message");
+    if (dialog && /CPU/.exec(dialog.text())) {
+        log("CPU shortage, pausing for 10 minutes.");
+        enginePaused.next(600000);
+        dialog.detach();
+        observer.disconnect();
     }
 }
 
@@ -599,7 +624,7 @@ function setupChartPoints() {
 
 var scripts = "<link href=\"//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/themes/le-frog/jquery-ui.min.css\" rel=\"stylesheet\" type=\"text/css\">\n<script src=\"https://canvasjs.com/assets/script/canvasjs.min.js\"></script>";
 
-var css = "<style type=\"text/css\">\n    .cashmachine-wrapper { padding: 0 !important; color: #67c23a; font-size: 12px; line-height: 1; background-color: #1c233f; width: 510px; overflow: scroll; height: 100px;}\n    .console-text {  max-height: 160px; height: 160px; overflow-y: auto; }\n    .console-text p { margin: 0; padding: 0; color: green; }\n    .test-btn { float: right; margin-right: 20px; }\n    .avg-value { color: black; font-size: 16px; padding-left: 10px; }\n    .ui-dialog-titlebar { padding: 3px !important; line-height: 0.6; }\n    .ui-dialog-title { font-size: 10px; padding: 0; margin: 0; height: 7px; overflow: initial !important; }\n    .ui-button-icon-only.ui-dialog-titlebar-close { height: 11px; width: 11px; top: 10px; }\n    .ui-widget-content { border: 1px solid #41455d; background: #1c233f; color: #ffffff; }\n    #chartContainer { height: 170px; padding: 0; }\n\n    .start-stop {\n        cursor: pointer;\n    }\n    .start-stop.started {\n        background-color: green;\n    }\n    .start-stop.stopped {\n        background-color: gray;\n    }\n\n    .monitor {\n        padding-left: 1px;\n        display: flex;\n    }\n\n    .cell {\n        width: 20%;\n        height: 50px;\n        border: 1px solid brown;\n        text-align: center;\n        display: grid;\n    }\n\n    .cell .value.red {\n        color: red;\n    }\n\n    .cell .value.green {\n        color: green;\n    }\n\n    .inputs > input {\n        color: black;\n        text-align: end;\n        width: 50px;\n        height: 20px;\n    }\n\n    .inputs {\n        padding-bottom: 3px;\n        padding-top: 3px;\n    }\n\n    p.won {\n        color: greenyellow;\n    }\n\n    p.lost {\n        color: firebrick;\n    }\n\n    .last-rolls table {\n        width: 100%;\n        text-align: center;\n        height: 20px;\n    }\n\n    .roll-result {\n        border: 1px solid antiquewhite;\n        color: black;\n        width: 10%;\n    }\n\n    .roll-result.empty {\n        background-color: darkgray;\n    }\n    .roll-result.win {\n         background-color: green;\n    }\n    .roll-result.win-high {\n        background-color: darkgreen;\n    }\n    .roll-result.loss {\n        background-color: red;\n    }\n\n</style>";
+var css = "<style type=\"text/css\">\n    .cashmachine-wrapper { padding: 0 !important; color: #67c23a; font-size: 12px; line-height: 1; background-color: #1c233f; width: 510px; overflow: scroll; height: 100px;}\n    .console-text {  max-height: 160px; height: 160px; overflow-y: auto; }\n    .console-text p { margin: 0; padding: 0; color: #00b300; }\n    .test-btn { float: right; margin-right: 20px; }\n    .avg-value { color: black; font-size: 16px; padding-left: 10px; }\n    .ui-dialog-titlebar { padding: 3px !important; line-height: 0.6; }\n    .ui-dialog-title { font-size: 10px; padding: 0; margin: 0; height: 7px; overflow: initial !important; }\n    .ui-button-icon-only.ui-dialog-titlebar-close { height: 11px; width: 11px; top: 10px; }\n    .ui-widget-content { border: 1px solid #41455d; background: #1c233f; color: #ffffff; }\n    #chartContainer { height: 170px; padding: 0; }\n\n    .start-stop {\n        cursor: pointer;\n    }\n    .start-stop.started {\n        background-color: green;\n    }\n    .start-stop.stopped {\n        background-color: gray;\n    }\n\n    .monitor {\n        padding-left: 1px;\n        display: flex;\n    }\n\n    .cell {\n        width: 20%;\n        height: 50px;\n        border: 1px solid brown;\n        text-align: center;\n        display: grid;\n    }\n\n    .cell .value.red {\n        color: red;\n    }\n\n    .cell .value.green {\n        color: green;\n    }\n\n    .inputs > input {\n        color: black;\n        text-align: end;\n        width: 50px;\n        height: 20px;\n    }\n\n    .inputs {\n        padding-bottom: 3px;\n        padding-top: 3px;\n    }\n\n    p.won {\n        color: greenyellow;\n    }\n\n    p.lost {\n        color: #fc2d2d;\n    }\n\n    .last-rolls table {\n        width: 100%;\n        text-align: center;\n        height: 20px;\n    }\n\n    .roll-result {\n        border: 1px solid antiquewhite;\n        color: black;\n        width: 10%;\n    }\n\n    .roll-result.empty {\n        background-color: darkgray;\n    }\n    .roll-result.win {\n         background-color: green;\n    }\n    .roll-result.win-high {\n        background-color: darkgreen;\n    }\n    .roll-result.loss {\n        background-color: red;\n    }\n\n</style>";
 
 var ui = "<div class=\"cashmachine-wrapper\">\n    <div class=\"monitor line1\">\n        <div class=\"cell start-stop stopped\">\n            <span class=\"header\"></span>\n            <span class=\"value\"></span>\n        </div>\n        <div class=\"cell bet-amount\">\n            <span class=\"header\">Bet Amount</span>\n            <span class=\"value\"></span>\n        </div>\n        <div class=\"cell roll-under\">\n            <span class=\"header\">Roll Under</span>\n            <span class=\"value\"></span>\n        </div>\n        <div class=\"cell win-loss\">\n            <span class=\"header\">Win/Loss Amount</span>\n            <span class=\"value\"></span>\n        </div>\n        <div class=\"cell next-bet-guess\">\n            <span class=\"header\">Next Bet Guess</span>\n            <span class=\"value\"></span>\n        </div>\n    </div>\n    <div class=\"monitor line2\">\n        <div class=\"cell\">\n            <input type=\"button\" value=\"Test\" class=\"test-btn\" style=\"width: 100%;\">\n        </div>\n        <div class=\"cell avg-5\">\n            <span class=\"header\">Avg 5</span>\n            <span class=\"value\"></span>\n        </div>\n        <div class=\"cell avg-10\">\n            <span class=\"header\">Avg 10</span>\n            <span class=\"value\"></span>\n        </div>\n        <div class=\"cell nb-losses\">\n            <span class=\"header\">Nb Losses</span>\n            <span class=\"value\"></span>\n        </div>\n        <div class=\"cell nb-wins\">\n            <span class=\"header\">Nb Wins</span>\n            <span class=\"value\"></span>\n        </div>\n    </div>\n    <div class=\"inputs\">\n        <span>Initial amount:</span>\n        <input class=\"initial-amount\" type=\"number\">\n        <span>Max loss amount:</span>\n        <input class=\"max-loss\" type=\"number\">\n        <span>Stop at amount won:</span>\n        <input class=\"max-gains\" type=\"number\">\n    </div>\n    <div class=\"console-text\"></div>\n    <div class=\"last-rolls\">\n        <table>\n            <tbody>\n                <tr>\n                    <td class=\"roll-result empty\"></td>\n                    <td class=\"roll-result empty\"></td>\n                    <td class=\"roll-result empty\"></td>\n                    <td class=\"roll-result empty\"></td>\n                    <td class=\"roll-result empty\"></td>\n                    <td class=\"roll-result empty\"></td>\n                    <td class=\"roll-result empty\"></td>\n                    <td class=\"roll-result empty\"></td>\n                    <td class=\"roll-result empty\"></td>\n                    <td class=\"roll-result empty\"></td>\n                </tr>\n            </tbody>\n        </table>\n    </div>\n    <div id=\"chartContainer\"></div>\n</div>";
 
@@ -661,6 +686,7 @@ var rollUnder;
 
 // checks the status of the engine on each iteration (i.e. will stop before next bet if engine stopped)
 async function startCashMachineAlgo() {
+    new MutationObserver(onErrorDialog).observe(document.querySelector("body"), { childList: true, subtree: true});
 
     while (engineStarted.getValue() === true) {
         if (enginePaused.getValue() > 0) {
@@ -676,7 +702,7 @@ async function startCashMachineAlgo() {
             await sleep(2000 + Math.floor(Math.random() * Math.floor(1000)));
         }
     }
-
+    log("Exiting while loop");
 }
 
 function calculateNextBet() {
@@ -709,6 +735,7 @@ function placeBet() {
     log(`Placing next bet: ${amount}@${rollUnder}`);
     moveRollUnderCursorTo(rollUnder);
     changeAmountTo(amount);
+    setLastBetAmountValue(amount);
     return runBet();
 }
 
@@ -729,7 +756,7 @@ function waitIfNeeded() {
         enginePaused.next(10000);
     }
     if (rollsAvg5Value > 70) {
-        log("Pause for 10s (average 5 > 75)");
+        log("Pause for 10s (average 5 > 70)");
         enginePaused.next(10000);
     }
     var nbLosses = 0;
@@ -769,6 +796,10 @@ function mustBeLocked(winLossAmount) {
             log("Max losed amount exceeded, forcing stop.");
             return true;
         }
+        if (winLossAmount > maxGainBeforeStopping) {
+            log("Win amount reached, stopping! :-D");
+            return true;
+        }
     }
 
     return false;
@@ -781,14 +812,8 @@ function mustBeLocked(winLossAmount) {
     createChart();
     waitForGameToInit();
 
-    engineStarted.pipe(
-        Rx.operators.filter(
-            function (state) {
-                return state !== undefined;
-            }
-        )).subscribe(function (state) {
-            if (!state) {
-            } else {
+    engineStarted.subscribe(function (state) {
+            if (state === true) {
                 log("Cash Machine algo STARTED.");
                 startCashMachineAlgo().then(
                 () => {

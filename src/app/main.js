@@ -13,14 +13,8 @@ import * as Locker from "./locker.js";
     Chart.createChart();
     Init.waitForGameToInit();
 
-    Vars.engineStarted.pipe(
-        Rx.operators.filter(
-            function (state) {
-                return state !== undefined;
-            }
-        )).subscribe(function (state) {
-            if (!state) {
-            } else {
+    Vars.engineStarted.subscribe(function (state) {
+            if (state === true) {
                 Utils.log("Cash Machine algo STARTED.");
                 BetEngine.startCashMachineAlgo().then(
                 () => {

@@ -9,6 +9,7 @@ var rollsAvg5Elt;
 export var rollUnderValue;
 var rollUnderElt;
 export var betAmountValue;
+export var lastBetAmountValue;
 var betAmountElt;
 export var nextBetGuessValue;
 var nextBetGuessElt;
@@ -58,6 +59,10 @@ export function setBetAmountElt (value) {
 export function setBetAmountValue (value) {
     betAmountValue = value;
     betAmountElt.text(betAmountValue);
+}
+
+export function setLastBetAmountValue (value) {
+    lastBetAmountValue = value;
 }
 
 export function setRollUnderElt (value) {

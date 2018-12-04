@@ -3,14 +3,24 @@ import * as Utils from "./utils.js";
 
 export function processNewBetResult(rollResult) {
     var win = false;
-    if (rollResult > Vars.rollUnderValue) {
+    var tooltipAmount = $(".notification-comp p");
+    var tooltipBetAmount = $(".notification-comp h5");
+
+
+    if (rollResult >= Vars.rollUnderValue) {
         Vars.incrementNbLossesValue();
-        Vars.addWinLossAmount(0 - parseFloat(Vars.betAmountValue));
+
+        var amountLost = parseFloat(tooltipAmount.text().substr(tooltipAmount.text().indexOf("lost ") + 4, 6));
+
+        Vars.addWinLossAmount(0 - amountLost);
     } else {
         win = true;
         Vars.incrementNbWinsValue();
-        var winTooltip = $(".notification-comp.success p");
-        Vars.addWinLossAmount((parseFloat(winTooltip.text().substr(winTooltip.text().indexOf("win ") + 4, 6)) - parseFloat(Vars.betAmountValue)).toFixed(4));
+
+        var amountWinned = parseFloat(tooltipAmount.text().substr(tooltipAmount.text().indexOf("win ") + 4, 6));
+        var amountBet = parseFloat(tooltipBetAmount.text().substr(tooltipBetAmount.text().indexOf("bet ") + 4, 6));
+
+        Vars.addWinLossAmount((amountWinned - amountBet).toFixed(4));
     }
     Vars.addNewRollResult(parseInt(rollResult), win);
     Utils.recalculateRollAverages();
