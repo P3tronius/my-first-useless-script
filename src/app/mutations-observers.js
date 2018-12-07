@@ -47,12 +47,32 @@ export function onNewRollResult() {
     }
 }
 
-export function onErrorDialog(mutations, observer) {
-    var dialog = $(".el-message");
-    if (dialog && /CPU/.exec(dialog.text())) {
-        Utils.log("CPU shortage, pausing for 10 minutes.");
-        Vars.enginePaused.next(600000);
-        dialog.detach();
-        observer.disconnect();
+export function onErrorDialog() {
+    if (!Vars.cpuShortage.getValue()) {
+        var dialog1 = $(".el-message");
+        var dialog2 = $(".el-message-box__wrapper");
+        if ((dialog1[0] && /CPU/.exec(dialog1.text())) || (dialog2[0] && /CPU/.exec(dialog2.text()))) {
+            Utils.log("CPU shortage, waiting to be under 90%");
+            if (dialog2) {
+                dialog2.detach();
+                $(".v-modal").detach();
+            }
+            if (dialog1) {
+                dialog1.detach();
+            }
+            Vars.cpuShortage.next(true);
+            Vars.onNewBetResultSubject.next(undefined);
+        }
     }
+}
+
+export function onCPUResourceChange() {
+    var percent = document.querySelector(".el-progress__text").textContent;
+
+    if (Vars.cpuShortage.getValue() && percent.length !== 4 && percent < "90%") {
+        Utils.log(`CPU value at ${percent}, resuming`);
+        Vars.cpuShortage.next(false);
+        Vars.onNewBetResultSubject.next(undefined);
+    }
+
 }

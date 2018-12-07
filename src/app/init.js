@@ -9,8 +9,9 @@ export function waitForGameToInit() {
         function (state) {
             if (state) {
                 document.querySelector(".test-btn").addEventListener("click", testButtonClicked);
-                new MutationObserver(MutationsObs.onRollUnderMutate).observe(document.querySelector(".content.min50"), { subtree: true, characterData: true});
+                new MutationObserver(MutationsObs.onRollUnderMutate).observe(document.querySelector(".content.min50"), { subtree: true, characterData: true });
                 new MutationObserver(MutationsObs.onNewRollResult).observe(document.querySelector(".my-progress > .leve1"), { childList: true, subtree: true });
+                new MutationObserver(MutationsObs.onCPUResourceChange).observe(document.querySelector(".el-progress__text"), { subtree: true, characterData: true })
 
                 MutationsObs.watchBetAmountChanges();
                 Utils.moveRollUnderCursorTo(76);
@@ -38,5 +39,5 @@ export function waitForGameToInit() {
 }
 
 function testButtonClicked() {
-    Utils.changeAmountTo(0.5);
+    Utils.moveRollUnderCursorTo(76);
 }

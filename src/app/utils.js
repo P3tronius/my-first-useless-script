@@ -1,26 +1,33 @@
 import * as Vars from "./variables.js";
 
 export function log(text) {
-    Vars.consoleElt.append("<p>" + text + "</p>");
+    Vars.consoleElt.append("<p>" + text + "<span style='float: right; color: whitesmoke'>" + new Date().toLocaleString() + "</span></p>");
     Vars.consoleElt.scrollTop(Vars.consoleElt[0].scrollHeight);
 }
 
-export function logLastBetWinStatus(winOrLoss) {
-    var text = $(".console-text p:last-child")[0].textContent;
+export function logLastBetWinStatus(winOrLoss, rollResult) {
+    var lastChild = $(".console-text p:last-child")[0];
+    var text = lastChild.textContent;
     var winText = " Win";
     var lostText = " Lost";
+    var textToAdd = `${winOrLoss ? winText : lostText} [${rollResult}]`;
+    var classToAdd = winOrLoss ? "won" : "lost";
 
     if (text.startsWith("Placing")) {
-        $(".console-text p:last-child")[0].textContent += winOrLoss ? winText : lostText;
-        $(".console-text p:last-child")[0].classList.add(winOrLoss ? "won" : "lost");
+        var html = lastChild.innerHTML.split('<');
+        html[0] += textToAdd;
+        lastChild.innerHTML = html[0] + '<' + html[1] + '<' + html[2];
+        lastChild.classList.add(classToAdd);
     } else {
         var idx = 1;
         var element = $(`.console-text p:nth-last-child(${idx})`)[0];
         while (element !== undefined) {
             text = element.textContent;
             if (text.startsWith("Placing")) {
-                $(`.console-text p:nth-last-child(${idx})`)[0].textContent += winOrLoss ? winText : lostText;
-                $(`.console-text p:nth-last-child(${idx})`)[0].classList.add(winOrLoss ? "won" : "lost");
+                var html = $(`.console-text p:nth-last-child(${idx})`)[0].innerHTML.split('<');
+                html[0] += textToAdd;
+                $(`.console-text p:nth-last-child(${idx})`)[0].innerHTML = html[0] + '<' + html[1] + '<' + html[2];
+                $(`.console-text p:nth-last-child(${idx})`)[0].classList.add(classToAdd);
                 break;
             }
             idx++;
@@ -30,7 +37,6 @@ export function logLastBetWinStatus(winOrLoss) {
 }
 
 export function sleep(ms) {
-    log("waiting " + ms + "ms");
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 

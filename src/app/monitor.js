@@ -25,7 +25,7 @@ export function processNewBetResult(rollResult) {
     Vars.addNewRollResult(parseInt(rollResult), win);
     Utils.recalculateRollAverages();
     Vars.setLooseStatusValue(recalculateNextBetValue());
-    Utils.logLastBetWinStatus(win);
+    Utils.logLastBetWinStatus(win, rollResult);
 }
 
 function recalculateNextBetValue() {

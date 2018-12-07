@@ -21,7 +21,7 @@ async function resetChart() {
     setupChartPoints();
     var wait = true;
     while (wait) {
-        await Utils.sleep(500);
+        await new Promise(resolve => setTimeout(resolve, 500));
         if (document.querySelector(".table-list tbody tr td:nth-child(5)")) {
             if (chartMutationObs) {
                 chartMutationObs.disconnect();

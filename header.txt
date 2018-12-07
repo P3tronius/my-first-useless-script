@@ -5,7 +5,7 @@
 // @version      0.2
 // @description  try to take over the world!
 // @author       You
-// @match        https://betdice.one/
+// @match        https://betdice.one
 // @grant        none
 // @require      https://cdnjs.cloudflare.com/ajax/libs/rxjs/5.5.11/Rx.js
 // @require      https://code.jquery.com/jquery.js

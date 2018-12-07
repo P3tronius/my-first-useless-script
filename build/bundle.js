@@ -37,15 +37,16 @@ var winLossValueElt;
 var startStopElt;
 
 var lastRolls = [];
-var maxAcceptableLosedAmount = 5;
+var maxAcceptableLosedAmount = 15;
 var initialAmount = 1;
-var maxGainBeforeStopping = 10;
+var maxGainBeforeStopping = 100;
 var initSubject = new Rx.Subject();
 var onRollUnderChangedSubject = new Rx.Subject();
 var onBetAmountChangedSubject = new Rx.Subject();
 var onNewBetResultSubject = new Rx.Subject();
 var engineStarted = new Rx.BehaviorSubject(false);
 var enginePaused = new Rx.BehaviorSubject(0);
+var cpuShortage = new Rx.BehaviorSubject(false);
 
 var winLossAmountSubject = new Rx.Subject(undefined);
 
@@ -61,7 +62,9 @@ function startOrStopCashMachine (value) {
     } else {
         started = !started;
     }
-    engineStarted.next(started);
+    if (engineStarted.getValue() !== started) {
+        engineStarted.next(started);
+    }
     startStopElt.removeClass("started").removeClass("stopped");
     startStopElt.addClass(started ? "started" : "stopped");
     $(".start-stop .value").text(started ? "STOP" : "START");
@@ -124,6 +127,14 @@ function setRollsAvg5Value (value) {
     rollsAvg5Elt.text(rollsAvg5Value);
 }
 
+function resetVariables() {
+    rollsAvg5Value = 50;
+    rollsAvg10Elt = 50;
+    nbLossesValue = 0;
+    nbWinsValue = 0;
+    nextBetGuessValue = 0;
+}
+
 function setRollsAvg10Elt (value) {
     rollsAvg10Elt = value;
 }
@@ -156,7 +167,6 @@ function setMaxAcceptableLossAmount (value) {
         v = parseFloat(value.target.value);
     }
     maxAcceptableLosedAmount = v;
-    log(`Updated maxAcceptableLosedAmount to ${maxAcceptableLosedAmount}`);
 }
 
 function setMaxGainBeforeStopping(value) {
@@ -170,7 +180,6 @@ function setMaxGainBeforeStopping(value) {
 function setInitialAmount ($event) {
     if ($event.target) {
         initialAmount = parseFloat($event.target.value);
-        log(`Initial amount changed to ${initialAmount}`);
     }
 }
 
@@ -187,7 +196,7 @@ function addNewRollResult(rollResult, isWin) {
         elt.removeClass("win").removeClass("win-high").removeClass("loss");
         if (roll.win) {
             elt.addClass("win");
-            if (roll.roll >= 75) {
+            if (roll.roll >= 76) {
                 elt.addClass("win-high");
             }
         } else {
@@ -201,26 +210,33 @@ function setConsoleElt (value) {
 }
 
 function log(text) {
-    consoleElt.append("<p>" + text + "</p>");
+    consoleElt.append("<p>" + text + "<span style='float: right; color: whitesmoke'>" + new Date().toLocaleString() + "</span></p>");
     consoleElt.scrollTop(consoleElt[0].scrollHeight);
 }
 
-function logLastBetWinStatus(winOrLoss) {
-    var text = $(".console-text p:last-child")[0].textContent;
+function logLastBetWinStatus(winOrLoss, rollResult) {
+    var lastChild = $(".console-text p:last-child")[0];
+    var text = lastChild.textContent;
     var winText = " Win";
     var lostText = " Lost";
+    var textToAdd = `${winOrLoss ? winText : lostText} [${rollResult}]`;
+    var classToAdd = winOrLoss ? "won" : "lost";
 
     if (text.startsWith("Placing")) {
-        $(".console-text p:last-child")[0].textContent += winOrLoss ? winText : lostText;
-        $(".console-text p:last-child")[0].classList.add(winOrLoss ? "won" : "lost");
+        var html = lastChild.innerHTML.split('<');
+        html[0] += textToAdd;
+        lastChild.innerHTML = html[0] + '<' + html[1] + '<' + html[2];
+        lastChild.classList.add(classToAdd);
     } else {
         var idx = 1;
         var element = $(`.console-text p:nth-last-child(${idx})`)[0];
         while (element !== undefined) {
             text = element.textContent;
             if (text.startsWith("Placing")) {
-                $(`.console-text p:nth-last-child(${idx})`)[0].textContent += winOrLoss ? winText : lostText;
-                $(`.console-text p:nth-last-child(${idx})`)[0].classList.add(winOrLoss ? "won" : "lost");
+                var html = $(`.console-text p:nth-last-child(${idx})`)[0].innerHTML.split('<');
+                html[0] += textToAdd;
+                $(`.console-text p:nth-last-child(${idx})`)[0].innerHTML = html[0] + '<' + html[1] + '<' + html[2];
+                $(`.console-text p:nth-last-child(${idx})`)[0].classList.add(classToAdd);
                 break;
             }
             idx++;
@@ -230,7 +246,6 @@ function logLastBetWinStatus(winOrLoss) {
 }
 
 function sleep(ms) {
-    log("waiting " + ms + "ms");
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
@@ -294,7 +309,7 @@ function processNewBetResult(rollResult) {
     addNewRollResult(parseInt(rollResult), win);
     recalculateRollAverages();
     setLooseStatusValue(recalculateNextBetValue());
-    logLastBetWinStatus(win);
+    logLastBetWinStatus(win, rollResult);
 }
 
 function recalculateNextBetValue() {
@@ -409,14 +424,34 @@ function onNewRollResult() {
     }
 }
 
-function onErrorDialog(mutations, observer) {
-    var dialog = $(".el-message");
-    if (dialog && /CPU/.exec(dialog.text())) {
-        log("CPU shortage, pausing for 10 minutes.");
-        enginePaused.next(600000);
-        dialog.detach();
-        observer.disconnect();
+function onErrorDialog() {
+    if (!cpuShortage.getValue()) {
+        var dialog1 = $(".el-message");
+        var dialog2 = $(".el-message-box__wrapper");
+        if ((dialog1[0] && /CPU/.exec(dialog1.text())) || (dialog2[0] && /CPU/.exec(dialog2.text()))) {
+            log("CPU shortage, waiting to be under 90%");
+            if (dialog2) {
+                dialog2.detach();
+                $(".v-modal").detach();
+            }
+            if (dialog1) {
+                dialog1.detach();
+            }
+            cpuShortage.next(true);
+            onNewBetResultSubject.next(undefined);
+        }
     }
+}
+
+function onCPUResourceChange() {
+    var percent = document.querySelector(".el-progress__text").textContent;
+
+    if (cpuShortage.getValue() && percent.length !== 4 && percent < "90%") {
+        log(`CPU value at ${percent}, resuming`);
+        cpuShortage.next(false);
+        onNewBetResultSubject.next(undefined);
+    }
+
 }
 
 function waitForGameToInit() {
@@ -426,8 +461,9 @@ function waitForGameToInit() {
         function (state) {
             if (state) {
                 document.querySelector(".test-btn").addEventListener("click", testButtonClicked);
-                new MutationObserver(onRollUnderMutate).observe(document.querySelector(".content.min50"), { subtree: true, characterData: true});
+                new MutationObserver(onRollUnderMutate).observe(document.querySelector(".content.min50"), { subtree: true, characterData: true });
                 new MutationObserver(onNewRollResult).observe(document.querySelector(".my-progress > .leve1"), { childList: true, subtree: true });
+                new MutationObserver(onCPUResourceChange).observe(document.querySelector(".el-progress__text"), { subtree: true, characterData: true });
 
                 watchBetAmountChanges();
                 moveRollUnderCursorTo(76);
@@ -455,7 +491,7 @@ function waitForGameToInit() {
 }
 
 function testButtonClicked() {
-    changeAmountTo(0.5);
+    moveRollUnderCursorTo(76);
 }
 
 var chart;
@@ -479,7 +515,7 @@ async function resetChart() {
     setupChartPoints();
     var wait = true;
     while (wait) {
-        await sleep(500);
+        await new Promise(resolve => setTimeout(resolve, 500));
         if (document.querySelector(".table-list tbody tr td:nth-child(5)")) {
             if (chartMutationObs) {
                 chartMutationObs.disconnect();
@@ -683,12 +719,18 @@ function createUI () {
 
 var amount;
 var rollUnder;
+var running = false;
 
 // checks the status of the engine on each iteration (i.e. will stop before next bet if engine stopped)
 async function startCashMachineAlgo() {
     new MutationObserver(onErrorDialog).observe(document.querySelector("body"), { childList: true, subtree: true});
 
+    if (running) {
+        log("Engine already started, not starting again");
+        return;
+    }
     while (engineStarted.getValue() === true) {
+        running = true;
         if (enginePaused.getValue() > 0) {
             await sleep(enginePaused.getValue() + Math.floor(Math.random() * Math.floor(1000)));
             resetLooseStatusValue();
@@ -702,30 +744,41 @@ async function startCashMachineAlgo() {
             await sleep(2000 + Math.floor(Math.random() * Math.floor(1000)));
         }
     }
-    log("Exiting while loop");
+    log("Exiting startCashMachineAlgo()");
+    running = false;
+    resetCashMachine();
+}
+
+function resetCashMachine() {
+    resetLooseStatusValue();
+    resetVariables();
+    enginePaused.next(0);
 }
 
 function calculateNextBet() {
     amount = initialAmount;
-    rollUnder = 75;
+    rollUnder = 76;
 
     var lastBetRoll = lastRolls.length > 0 ? lastRolls[lastRolls.length - 1].roll : 50;
     var last1RollWin = lastRolls.length > 0 ? lastRolls[lastRolls.length - 1].win : true;
     var last2RollWin = lastRolls.length > 1 ? lastRolls[lastRolls.length - 2].win : true;
     var last3RollWin = lastRolls.length > 2 ? lastRolls[lastRolls.length - 3].win : true;
+    var last4RollWin = lastRolls.length > 3 ? lastRolls[lastRolls.length - 4].win : true;
 
     var last3RollsWined = last1RollWin && last2RollWin && last3RollWin;
     var last3RollsLoosed = !last1RollWin && !last2RollWin && !last3RollWin;
+    var last4RollsLoosed = !last1RollWin && !last2RollWin && !last3RollWin && !last4RollWin;
 
-    if (lastBetRoll > 75) {
-        amount = initialAmount * (last3RollsLoosed ? 4 : 2);
-        rollUnder = 75;
+
+    if (lastBetRoll > 76) {
+        amount = initialAmount * (last3RollsLoosed ? (last4RollsLoosed ? 0.5 : 8) : 2);
     } else if (lastBetRoll > 50) {
-        amount = initialAmount * (last3RollsWined ? 0.5 : 1);
-        rollUnder = 75;
+        rollUnder = 76;
     } else {
-        amount = initialAmount * (last3RollsWined ? 0.1 : 1);
-        rollUnder = last3RollsWined ? 96 : 75;
+        amount = initialAmount * (last3RollsWined ? 0.1250 : 1);
+        if (last3RollsWined) {
+            rollUnder = 96;
+        }
     }
     amount = Math.round(amount * 1000) / 1000;
 }
@@ -766,8 +819,8 @@ function waitIfNeeded() {
         }
     });
     if (nbLosses > 4) {
-        log("At least 5 rolls above 75 in last 10, pausing for 30s");
-        enginePaused.next(30000);
+        log("At least 5 rolls above 75 in last 10, pausing for 2m");
+        enginePaused.next(120000);
     }
 }
 

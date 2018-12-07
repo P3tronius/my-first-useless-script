@@ -1,5 +1,3 @@
-import * as Utils from "./utils";
-
 export var consoleElt;
 
 export var rollsAvg10Value;
@@ -23,15 +21,16 @@ var winLossValueElt;
 var startStopElt;
 
 export var lastRolls = [];
-export var maxAcceptableLosedAmount = 5;
+export var maxAcceptableLosedAmount = 15;
 export var initialAmount = 1;
-export var maxGainBeforeStopping = 10;
+export var maxGainBeforeStopping = 100;
 export var initSubject = new Rx.Subject();
 export var onRollUnderChangedSubject = new Rx.Subject();
 export var onBetAmountChangedSubject = new Rx.Subject();
 export var onNewBetResultSubject = new Rx.Subject();
 export var engineStarted = new Rx.BehaviorSubject(false);
 export var enginePaused = new Rx.BehaviorSubject(0);
+export var cpuShortage = new Rx.BehaviorSubject(false);
 
 export var winLossAmountSubject = new Rx.Subject(undefined);
 
@@ -47,7 +46,9 @@ export function startOrStopCashMachine (value) {
     } else {
         started = !started;
     }
-    engineStarted.next(started);
+    if (engineStarted.getValue() !== started) {
+        engineStarted.next(started);
+    }
     startStopElt.removeClass("started").removeClass("stopped");
     startStopElt.addClass(started ? "started" : "stopped");
     $(".start-stop .value").text(started ? "STOP" : "START");
@@ -110,6 +111,14 @@ export function setRollsAvg5Value (value) {
     rollsAvg5Elt.text(rollsAvg5Value);
 }
 
+export function resetVariables() {
+    rollsAvg5Value = 50;
+    rollsAvg10Elt = 50;
+    nbLossesValue = 0;
+    nbWinsValue = 0;
+    nextBetGuessValue = 0;
+}
+
 export function setRollsAvg10Elt (value) {
     rollsAvg10Elt = value;
 }
@@ -142,7 +151,6 @@ export function setMaxAcceptableLossAmount (value) {
         v = parseFloat(value.target.value);
     }
     maxAcceptableLosedAmount = v;
-    Utils.log(`Updated maxAcceptableLosedAmount to ${maxAcceptableLosedAmount}`);
 }
 
 export function setMaxGainBeforeStopping(value) {
@@ -156,7 +164,6 @@ export function setMaxGainBeforeStopping(value) {
 export function setInitialAmount ($event) {
     if ($event.target) {
         initialAmount = parseFloat($event.target.value);
-        Utils.log(`Initial amount changed to ${initialAmount}`);
     }
 }
 
@@ -173,7 +180,7 @@ export function addNewRollResult(rollResult, isWin) {
         elt.removeClass("win").removeClass("win-high").removeClass("loss");
         if (roll.win) {
             elt.addClass("win");
-            if (roll.roll >= 75) {
+            if (roll.roll >= 76) {
                 elt.addClass("win-high");
             }
         } else {
