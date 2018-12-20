@@ -5,7 +5,7 @@
 // @version      0.2
 // @description  try to take over the world!
 // @author       You
-// @match        https://betdice.one/?ref=ge4dqmzvgene
+// @match        https://betdice.one/dice/?ref=ge4dqmzvgene
 // @grant        none
 // @require      https://cdnjs.cloudflare.com/ajax/libs/rxjs/5.5.11/Rx.js
 // @require      https://code.jquery.com/jquery.js
@@ -210,7 +210,9 @@ function setConsoleElt (value) {
 }
 
 function log(text) {
-    consoleElt.append("<p>" + text + "<span style='float: right; color: whitesmoke'>" + new Date().toLocaleString() + "</span></p>");
+    consoleElt.append("<p>" + text + "<span style='float: right; color: whitesmoke'>"
+        + new Date().toLocaleTimeString(navigator.language, {hour: '2-digit', minute:'2-digit', second: '2-digit', hour12: false})
+        + "</span></p>");
     consoleElt.scrollTop(consoleElt[0].scrollHeight);
 }
 
@@ -283,6 +285,20 @@ function recalculateRollAverages() {
     setRollsAvg10Value(lastRolls.map((x) => x.roll).reduce((a, b) => a + b, 0) / lastRolls.length);
     var last5Rolls = lastRolls.slice(Math.max(lastRolls.length - 5, 0));
     setRollsAvg5Value(last5Rolls.map((x) => x.roll).reduce((a, b) => a + b, 0) / last5Rolls.length);
+}
+
+async function resumeWhenUIStuck() {
+    while (true) {
+        await sleep(300000);
+        var lastConsoleTime = $(".console-text p:last-child() span")[0].textContent.split(":")[1];
+        var currentTime = new Date().toLocaleTimeString(navigator.language, {minute:'2-digit', hour12: false});
+
+        if (engineStarted.getValue() === true && (parseInt(currentTime) > (parseInt(lastConsoleTime) + 6))) {
+            log("Forcing resume, UI seems to be stuck for more than 5 minutes");
+            $(".v-modal").detach();
+            clickOnRollButton();
+        }
+    }
 }
 
 function processNewBetResult(rollResult) {
@@ -438,7 +454,6 @@ function onErrorDialog() {
                 dialog1.detach();
             }
             cpuShortage.next(true);
-            onNewBetResultSubject.next(undefined);
         }
     }
 }
@@ -463,7 +478,7 @@ function waitForGameToInit() {
                 document.querySelector(".test-btn").addEventListener("click", testButtonClicked);
                 new MutationObserver(onRollUnderMutate).observe(document.querySelector(".content.min50"), { subtree: true, characterData: true });
                 new MutationObserver(onNewRollResult).observe(document.querySelector(".my-progress > .leve1"), { childList: true, subtree: true });
-                new MutationObserver(onCPUResourceChange).observe(document.querySelector(".el-progress__text"), { subtree: true, characterData: true });
+                new MutationObserver(onCPUResourceChange).observe(document.querySelector(".el-progress__text"), { subtree: true, characterData: true, childList: true, attributes: true });
 
                 watchBetAmountChanges();
                 moveRollUnderCursorTo(76);
@@ -488,6 +503,9 @@ function waitForGameToInit() {
     setLooseStatusValue(0);
     setRollsAvg5Value(0);
     setRollsAvg10Value(0);
+
+    // last chance when stuck
+    resumeWhenUIStuck();
 }
 
 function testButtonClicked() {
@@ -739,6 +757,7 @@ async function startCashMachineAlgo() {
 
         if (engineStarted.getValue() === true) {
             calculateNextBet();
+            amount = Math.round(amount * 1000) / 1000;
             await placeBet();
             await waitIfNeeded();
             await sleep(2000 + Math.floor(Math.random() * Math.floor(1000)));
@@ -765,22 +784,47 @@ function calculateNextBet() {
     var last3RollWin = lastRolls.length > 2 ? lastRolls[lastRolls.length - 3].win : true;
     var last4RollWin = lastRolls.length > 3 ? lastRolls[lastRolls.length - 4].win : true;
 
+    var last2RollsWined = last1RollWin && last2RollWin;
     var last3RollsWined = last1RollWin && last2RollWin && last3RollWin;
     var last3RollsLoosed = !last1RollWin && !last2RollWin && !last3RollWin;
     var last4RollsLoosed = !last1RollWin && !last2RollWin && !last3RollWin && !last4RollWin;
+    var last4RollsWined = last1RollWin && last2RollWin && last3RollWin && last4RollWin;
 
 
-    if (lastBetRoll > 76) {
-        amount = initialAmount * (last3RollsLoosed ? (last4RollsLoosed ? 0.5 : 8) : 2);
-    } else if (lastBetRoll > 50) {
-        rollUnder = 76;
-    } else {
-        amount = initialAmount * (last3RollsWined ? 0.1250 : 1);
-        if (last3RollsWined) {
-            rollUnder = 96;
-        }
+    if (last4RollsLoosed) {
+        amount = 4;
+        rollUnder = 50;
+        return;
     }
-    amount = Math.round(amount * 1000) / 1000;
+    if (last3RollsLoosed) {
+        amount = 2;
+        rollUnder = 76;
+        return;
+    }
+    if (last4RollsWined) {
+        amount = 0.125;
+        return;
+    }
+    if (last3RollsWined) {
+        amount = 0.1;
+        return;
+    }
+    if (last2RollsWined) {
+        amount = 0.5;
+        return;
+    }
+    if (rollsAvg10Value > 75) {
+        amount = 1;
+        rollUnder = 76;
+        return;
+    }
+    if (rollsAvg5Value < 60) {
+        amount = 0.125;
+        rollUnder = 96;
+        return;
+    }
+    amount = 0.25;
+    rollUnder = 76;
 }
 
 
@@ -805,12 +849,12 @@ function waitIfNeeded() {
     var n7 = lastRolls[lastRolls.length - 4];
 
     if (n10 && n10.roll > 75 && n9 && n9.roll > 75) {
-        log("Pause for 10s (2 rolls > 75)");
-        enginePaused.next(10000);
+        log("Pause for 3s (2 rolls > 75)");
+        enginePaused.next(3000);
     }
     if (rollsAvg5Value > 70) {
-        log("Pause for 10s (average 5 > 70)");
-        enginePaused.next(10000);
+        log("Pause for 3s (average 5 > 70)");
+        enginePaused.next(3000);
     }
     var nbLosses = 0;
     lastRolls.forEach(function (elt) {
@@ -819,8 +863,8 @@ function waitIfNeeded() {
         }
     });
     if (nbLosses > 4) {
-        log("At least 5 rolls above 75 in last 10, pausing for 2m");
-        enginePaused.next(120000);
+        log("At least 5 rolls above 75 in last 10, pausing for 5s");
+        enginePaused.next(5000);
     }
 }
 

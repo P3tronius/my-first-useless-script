@@ -1,7 +1,9 @@
 import * as Vars from "./variables.js";
 
 export function log(text) {
-    Vars.consoleElt.append("<p>" + text + "<span style='float: right; color: whitesmoke'>" + new Date().toLocaleString() + "</span></p>");
+    Vars.consoleElt.append("<p>" + text + "<span style='float: right; color: whitesmoke'>"
+        + new Date().toLocaleTimeString(navigator.language, {hour: '2-digit', minute:'2-digit', second: '2-digit', hour12: false})
+        + "</span></p>");
     Vars.consoleElt.scrollTop(Vars.consoleElt[0].scrollHeight);
 }
 
@@ -74,4 +76,18 @@ export function recalculateRollAverages() {
     Vars.setRollsAvg10Value(Vars.lastRolls.map((x) => x.roll).reduce((a, b) => a + b, 0) / Vars.lastRolls.length);
     var last5Rolls = Vars.lastRolls.slice(Math.max(Vars.lastRolls.length - 5, 0));
     Vars.setRollsAvg5Value(last5Rolls.map((x) => x.roll).reduce((a, b) => a + b, 0) / last5Rolls.length);
+}
+
+export async function resumeWhenUIStuck() {
+    while (true) {
+        await sleep(300000);
+        var lastConsoleTime = $(".console-text p:last-child() span")[0].textContent.split(":")[1];
+        var currentTime = new Date().toLocaleTimeString(navigator.language, {minute:'2-digit', hour12: false});
+
+        if (Vars.engineStarted.getValue() === true && (parseInt(currentTime) > (parseInt(lastConsoleTime) + 6))) {
+            log("Forcing resume, UI seems to be stuck for more than 5 minutes");
+            $(".v-modal").detach();
+            clickOnRollButton();
+        }
+    }
 }

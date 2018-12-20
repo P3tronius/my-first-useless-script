@@ -24,6 +24,7 @@ export async function startCashMachineAlgo() {
 
         if (Vars.engineStarted.getValue() === true) {
             calculateNextBet();
+            amount = Math.round(amount * 1000) / 1000;
             await placeBet();
             await waitIfNeeded();
             await Utils.sleep(2000 + Math.floor(Math.random() * Math.floor(1000)));
@@ -50,22 +51,47 @@ function calculateNextBet() {
     var last3RollWin = Vars.lastRolls.length > 2 ? Vars.lastRolls[Vars.lastRolls.length - 3].win : true;
     var last4RollWin = Vars.lastRolls.length > 3 ? Vars.lastRolls[Vars.lastRolls.length - 4].win : true;
 
+    var last2RollsWined = last1RollWin && last2RollWin;
     var last3RollsWined = last1RollWin && last2RollWin && last3RollWin;
     var last3RollsLoosed = !last1RollWin && !last2RollWin && !last3RollWin;
     var last4RollsLoosed = !last1RollWin && !last2RollWin && !last3RollWin && !last4RollWin;
+    var last4RollsWined = last1RollWin && last2RollWin && last3RollWin && last4RollWin;
 
 
-    if (lastBetRoll > 76) {
-        amount = Vars.initialAmount * (last3RollsLoosed ? (last4RollsLoosed ? 0.5 : 8) : 2);
-    } else if (lastBetRoll > 50) {
-        rollUnder = 76;
-    } else {
-        amount = Vars.initialAmount * (last3RollsWined ? 0.1250 : 1);
-        if (last3RollsWined) {
-            rollUnder = 96;
-        }
+    if (last4RollsLoosed) {
+        amount = 4;
+        rollUnder = 50;
+        return;
     }
-    amount = Math.round(amount * 1000) / 1000;
+    if (last3RollsLoosed) {
+        amount = 2;
+        rollUnder = 76;
+        return;
+    }
+    if (last4RollsWined) {
+        amount = 0.125;
+        return;
+    }
+    if (last3RollsWined) {
+        amount = 0.1;
+        return;
+    }
+    if (last2RollsWined) {
+        amount = 0.5;
+        return;
+    }
+    if (Vars.rollsAvg10Value > 75) {
+        amount = 1;
+        rollUnder = 76;
+        return;
+    }
+    if (Vars.rollsAvg5Value < 60) {
+        amount = 0.125;
+        rollUnder = 96;
+        return;
+    }
+    amount = 0.25;
+    rollUnder = 76;
 }
 
 
@@ -90,12 +116,12 @@ function waitIfNeeded() {
     var n7 = Vars.lastRolls[Vars.lastRolls.length - 4];
 
     if (n10 && n10.roll > 75 && n9 && n9.roll > 75) {
-        Utils.log("Pause for 10s (2 rolls > 75)");
-        Vars.enginePaused.next(10000);
+        Utils.log("Pause for 3s (2 rolls > 75)");
+        Vars.enginePaused.next(3000);
     }
     if (Vars.rollsAvg5Value > 70) {
-        Utils.log("Pause for 10s (average 5 > 70)");
-        Vars.enginePaused.next(10000);
+        Utils.log("Pause for 3s (average 5 > 70)");
+        Vars.enginePaused.next(3000);
     }
     var nbLosses = 0;
     Vars.lastRolls.forEach(function (elt) {
@@ -104,7 +130,7 @@ function waitIfNeeded() {
         }
     });
     if (nbLosses > 4) {
-        Utils.log("At least 5 rolls above 75 in last 10, pausing for 2m");
-        Vars.enginePaused.next(120000);
+        Utils.log("At least 5 rolls above 75 in last 10, pausing for 5s");
+        Vars.enginePaused.next(5000);
     }
 }

@@ -61,7 +61,6 @@ export function onErrorDialog() {
                 dialog1.detach();
             }
             Vars.cpuShortage.next(true);
-            Vars.onNewBetResultSubject.next(undefined);
         }
     }
 }

@@ -11,7 +11,7 @@ export function waitForGameToInit() {
                 document.querySelector(".test-btn").addEventListener("click", testButtonClicked);
                 new MutationObserver(MutationsObs.onRollUnderMutate).observe(document.querySelector(".content.min50"), { subtree: true, characterData: true });
                 new MutationObserver(MutationsObs.onNewRollResult).observe(document.querySelector(".my-progress > .leve1"), { childList: true, subtree: true });
-                new MutationObserver(MutationsObs.onCPUResourceChange).observe(document.querySelector(".el-progress__text"), { subtree: true, characterData: true })
+                new MutationObserver(MutationsObs.onCPUResourceChange).observe(document.querySelector(".el-progress__text"), { subtree: true, characterData: true, childList: true, attributes: true })
 
                 MutationsObs.watchBetAmountChanges();
                 Utils.moveRollUnderCursorTo(76);
@@ -36,6 +36,9 @@ export function waitForGameToInit() {
     Vars.setLooseStatusValue(0);
     Vars.setRollsAvg5Value(0);
     Vars.setRollsAvg10Value(0);
+
+    // last chance when stuck
+    Utils.resumeWhenUIStuck();
 }
 
 function testButtonClicked() {
