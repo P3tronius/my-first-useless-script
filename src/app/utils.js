@@ -3,7 +3,7 @@ import * as Vars from "./variables.js";
 export function log(text) {
     Vars.consoleElt.append("<p>" + text + "<span style='float: right; color: whitesmoke'>"
         + new Date().toLocaleTimeString(navigator.language, {hour: '2-digit', minute:'2-digit', second: '2-digit', hour12: false})
-        + "</span></p>");
+        + "</span><span class='full-date'>" + new Date() + "</span></p>");
     Vars.consoleElt.scrollTop(Vars.consoleElt[0].scrollHeight);
 }
 
@@ -81,13 +81,14 @@ export function recalculateRollAverages() {
 export async function resumeWhenUIStuck() {
     while (true) {
         await sleep(300000);
-        var lastConsoleTime = $(".console-text p:last-child() span")[0].textContent.split(":")[1];
-        var currentTime = new Date().toLocaleTimeString(navigator.language, {minute:'2-digit', hour12: false});
+        if (Vars.engineStarted.getValue() === true) {
+            var lastConsoleDateTime = $(".console-text p:last-child() span.full-date")[0].textContent;
 
-        if (Vars.engineStarted.getValue() === true && (parseInt(currentTime) > (parseInt(lastConsoleTime) + 6))) {
-            log("Forcing resume, UI seems to be stuck for more than 5 minutes");
-            $(".v-modal").detach();
-            clickOnRollButton();
+            if ((new Date(lastConsoleDateTime) > (new Date(new Date().setMinutes(new Date().getMinutes() + 6))))) {
+                log("Forcing resume, UI seems to be stuck for more than 5 minutes");
+                $(".v-modal").detach();
+                clickOnRollButton();
+            }
         }
     }
 }
