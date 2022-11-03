@@ -47,7 +47,7 @@
     "material-design-icons": "3.0.1",
     "moment": "2.24.0",
     "moment-timezone": "0.5.27",
-    "ng-table": "0.8.3",
+    "ng-table": "3.0.1",
     "ngx-autosize": "1.7.2",
     "ngx-autosize-input": "2.3.7",
     "ngx-matomo": "0.1.4",
